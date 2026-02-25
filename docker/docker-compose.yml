@@ -1,0 +1,12 @@
+services:
+  the-yard:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DEPLOYMENT_MODE=self-hosted
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+    restart: unless-stopped
