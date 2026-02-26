@@ -4,37 +4,106 @@ import { useState, useCallback } from "react";
 import { GenerateWorkoutRequest } from "@/types/workout";
 import { Profile } from "@/types/profile";
 import { Equipment, EquipmentConflict } from "@/types/gym";
+import type { WorkoutOutput } from "@/lib/ai/schemas";
 
 interface GenerateOptions {
   request: GenerateWorkoutRequest;
-  apiKey?: string;
   profileData?: Profile;
   equipmentData?: Equipment[];
   conflictsData?: EquipmentConflict[];
 }
 
 interface UseWorkoutStreamReturn {
-  content: string;
+  workout: Partial<WorkoutOutput> | null;
+  rawJson: string;
   isStreaming: boolean;
   error: string | null;
   generate: (options: GenerateOptions) => Promise<void>;
   reset: () => void;
 }
 
+/**
+ * Attempt to repair a partial JSON string by closing open brackets/braces/quotes.
+ * Returns parsed object or null if repair fails.
+ */
+function tryParsePartialJson(raw: string): Partial<WorkoutOutput> | null {
+  if (!raw.trim()) return null;
+
+  let attempt = raw.trim();
+
+  // Try parsing as-is first
+  try {
+    return JSON.parse(attempt);
+  } catch {
+    // Continue to repair
+  }
+
+  // Remove trailing comma before we close things
+  attempt = attempt.replace(/,\s*$/, "");
+
+  // Track what needs closing
+  const stack: string[] = [];
+  let inString = false;
+  let escape = false;
+
+  for (let i = 0; i < attempt.length; i++) {
+    const ch = attempt[i];
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    if (ch === "\\") {
+      escape = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+    if (ch === "{") stack.push("}");
+    else if (ch === "[") stack.push("]");
+    else if (ch === "}" || ch === "]") stack.pop();
+  }
+
+  // Close open string
+  if (inString) attempt += '"';
+
+  // Remove trailing incomplete key-value (e.g. `"key": ` with no value)
+  attempt = attempt.replace(/,?\s*"[^"]*"\s*:\s*$/, "");
+
+  // Remove trailing comma again after cleanup
+  attempt = attempt.replace(/,\s*$/, "");
+
+  // Close open brackets/braces
+  while (stack.length > 0) {
+    attempt += stack.pop();
+  }
+
+  try {
+    return JSON.parse(attempt);
+  } catch {
+    return null;
+  }
+}
+
 export function useWorkoutStream(): UseWorkoutStreamReturn {
-  const [content, setContent] = useState("");
+  const [workout, setWorkout] = useState<Partial<WorkoutOutput> | null>(null);
+  const [rawJson, setRawJson] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const reset = useCallback(() => {
-    setContent("");
+    setWorkout(null);
+    setRawJson("");
     setIsStreaming(false);
     setError(null);
   }, []);
 
   const generate = useCallback(
-    async ({ request, apiKey, profileData, equipmentData, conflictsData }: GenerateOptions) => {
-      setContent("");
+    async ({ request, profileData, equipmentData, conflictsData }: GenerateOptions) => {
+      setWorkout(null);
+      setRawJson("");
       setError(null);
       setIsStreaming(true);
 
@@ -43,7 +112,6 @@ export function useWorkoutStream(): UseWorkoutStreamReturn {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            ...(apiKey ? { "X-API-Key": apiKey } : {}),
           },
           body: JSON.stringify({
             ...request,
@@ -68,7 +136,19 @@ export function useWorkoutStream(): UseWorkoutStreamReturn {
           const { done, value } = await reader.read();
           if (done) break;
           accumulated += decoder.decode(value, { stream: true });
-          setContent(accumulated);
+          setRawJson(accumulated);
+
+          const parsed = tryParsePartialJson(accumulated);
+          if (parsed) {
+            setWorkout(parsed);
+          }
+        }
+
+        // Final parse
+        setRawJson(accumulated);
+        const finalParsed = tryParsePartialJson(accumulated);
+        if (finalParsed) {
+          setWorkout(finalParsed);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
@@ -79,5 +159,5 @@ export function useWorkoutStream(): UseWorkoutStreamReturn {
     []
   );
 
-  return { content, isStreaming, error, generate, reset };
+  return { workout, rawJson, isStreaming, error, generate, reset };
 }

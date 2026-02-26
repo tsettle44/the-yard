@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Workout } from "@/types/workout";
+import { WorkoutView } from "@/components/workout/workout-view";
 import { WorkoutStream } from "@/components/workout/workout-stream";
+import type { WorkoutOutput } from "@/lib/ai/schemas";
 import { Trash2, ChevronDown, ChevronUp, Star } from "lucide-react";
 
 export default function HistoryPage() {
@@ -77,11 +79,20 @@ export default function HistoryPage() {
               </CardHeader>
               {expandedId === workout.id && (
                 <CardContent className="space-y-3">
-                  <WorkoutStream
-                    content={workout.content}
-                    isStreaming={false}
-                    error={null}
-                  />
+                  {workout.structured ? (
+                    <WorkoutView
+                      workout={workout.structured as WorkoutOutput}
+                      isStreaming={false}
+                      error={null}
+                      onBack={() => setExpandedId(null)}
+                    />
+                  ) : (
+                    <WorkoutStream
+                      content={workout.content}
+                      isStreaming={false}
+                      error={null}
+                    />
+                  )}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((star) => (

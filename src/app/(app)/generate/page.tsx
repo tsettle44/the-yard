@@ -1,25 +1,25 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useProfiles } from "@/hooks/use-profile";
 import { useGym } from "@/hooks/use-gym";
 import { useWorkoutStream } from "@/hooks/use-workout-stream";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { WorkoutForm } from "@/components/workout/workout-form";
-import { WorkoutStream } from "@/components/workout/workout-stream";
+import { WorkoutView } from "@/components/workout/workout-view";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Workout, GenerateWorkoutRequest } from "@/types/workout";
 import { toast } from "sonner";
 
 export default function GeneratePage() {
-  const { activeProfile, hydrated: profilesHydrated } = useProfiles();
+  const { activeProfile, guestMode, hydrated: profilesHydrated } = useProfiles();
   const { activeGym, hydrated: gymsHydrated } = useGym();
-  const { content, isStreaming, error, generate } = useWorkoutStream();
-  const [apiKey] = useLocalStorage<string>("the-yard-api-key", "");
+  const { workout, rawJson, isStreaming, error, generate, reset } = useWorkoutStream();
   const [, setWorkoutHistory] = useLocalStorage<Workout[]>(
     "the-yard-workout-history",
     []
   );
   const lastRequestRef = useRef<GenerateWorkoutRequest | null>(null);
+  const [view, setView] = useState<"form" | "workout">("form");
 
   const hydrated = profilesHydrated && gymsHydrated;
 
@@ -31,28 +31,34 @@ export default function GeneratePage() {
     lastRequestRef.current = request;
     generate({
       request,
-      apiKey: apiKey || undefined,
       profileData: activeProfile || undefined,
       equipmentData: activeGym?.equipment || [],
       conflictsData: activeGym?.conflicts || [],
     });
+    setView("workout");
+  }
+
+  function handleBack() {
+    reset();
+    setView("form");
   }
 
   function handleSave() {
-    if (!content || !activeProfile || !activeGym) return;
+    if (!workout || !activeGym) return;
+    if (!guestMode && !activeProfile) return;
     const req = lastRequestRef.current;
 
-    const workout: Workout = {
+    const workoutRecord: Workout = {
       id: crypto.randomUUID(),
-      profile_id: activeProfile.id,
+      profile_id: guestMode ? null : activeProfile?.id || null,
       gym_id: activeGym.id,
       style: req?.style || "strength",
       duration_min: req?.duration_min || 45,
       target_rpe: req?.target_rpe || 7,
       body_groups: req?.body_groups || ["full_body"],
       parameters: req?.parameters || {},
-      content,
-      structured: null,
+      content: rawJson,
+      structured: workout as Workout["structured"],
       model_used: "claude-sonnet",
       prompt_tokens: 0,
       completion_tokens: 0,
@@ -62,28 +68,31 @@ export default function GeneratePage() {
       updated_at: new Date().toISOString(),
     };
 
-    setWorkoutHistory((prev) => [workout, ...prev]);
+    setWorkoutHistory((prev) => [workoutRecord, ...prev]);
     toast.success("Workout saved to history");
   }
 
+  if (view === "workout") {
+    return (
+      <WorkoutView
+        workout={workout}
+        isStreaming={isStreaming}
+        error={error}
+        onSave={workout && !isStreaming ? handleSave : undefined}
+        onBack={handleBack}
+      />
+    );
+  }
+
   return (
-    <div className="grid gap-6 lg:grid-cols-[350px_1fr]">
-      <div>
-        <WorkoutForm
-          profileId={activeProfile?.id || null}
-          gymId={activeGym?.id || null}
-          onGenerate={handleGenerate}
-          isStreaming={isStreaming}
-        />
-      </div>
-      <div>
-        <WorkoutStream
-          content={content}
-          isStreaming={isStreaming}
-          error={error}
-          onSave={content && !isStreaming ? handleSave : undefined}
-        />
-      </div>
+    <div className="max-w-lg mx-auto">
+      <WorkoutForm
+        profileId={activeProfile?.id || null}
+        gymId={activeGym?.id || null}
+        guestMode={guestMode}
+        onGenerate={handleGenerate}
+        isStreaming={isStreaming}
+      />
     </div>
   );
 }

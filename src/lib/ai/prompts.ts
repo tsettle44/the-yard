@@ -23,7 +23,12 @@ Rules:
 - Provide sets, reps (or time), and rest periods for every exercise.
 - Scale intensity to the target RPE.
 - Use proper exercise names and include brief form cues for non-obvious movements.
-- Format the workout in clean, readable markdown.`;
+
+Output guidance:
+- Organize the main workout into logical blocks (e.g. "Block A — Chest & Triceps").
+- Label each block with the correct format: "straight" for standard sets, "superset" for paired exercises, "circuit" for 3+ exercises cycled, or "emom"/"amrap"/"tabata" for timed formats.
+- Keep sets, reps, and rest as short strings (e.g. "3", "8-10", "60s").
+- Provide 2-4 concise, actionable coaching tips specific to this workout.`;
 }
 
 export function buildUserPrompt(ctx: PromptContext): string {

@@ -1,7 +1,7 @@
-import { streamText } from "ai";
+import { streamObject } from "ai";
 import { getAIClient, DEFAULT_MODEL } from "@/lib/ai/client";
 import { buildSystemPrompt, buildUserPrompt } from "@/lib/ai/prompts";
-import { generateWorkoutSchema } from "@/lib/ai/schemas";
+import { generateWorkoutSchema, workoutOutputSchema } from "@/lib/ai/schemas";
 import { config } from "@/lib/config";
 import { Profile } from "@/types/profile";
 import { Equipment, EquipmentConflict } from "@/types/gym";
@@ -23,16 +23,11 @@ export async function POST(request: Request) {
     const { profile_id, gym_id, style, duration_min, target_rpe, body_groups, parameters } =
       parsed.data;
 
-    // Get API key — from header (self-hosted) or env (hosted)
-    let apiKey = config.anthropic.apiKey;
-    const headerKey = request.headers.get("X-API-Key");
-    if (headerKey) {
-      apiKey = headerKey;
-    }
+    const apiKey = config.anthropic.apiKey;
 
     if (!apiKey) {
       return Response.json(
-        { error: "No API key configured. Set ANTHROPIC_API_KEY or provide via settings." },
+        { error: "No API key configured. Set the ANTHROPIC_API_KEY environment variable." },
         { status: 401 }
       );
     }
@@ -56,7 +51,7 @@ export async function POST(request: Request) {
     const conflicts: EquipmentConflict[] = body.conflicts_data || [];
 
     const anthropic = getAIClient(apiKey);
-    const result = streamText({
+    const result = streamObject({
       model: anthropic(DEFAULT_MODEL),
       system: buildSystemPrompt(),
       prompt: buildUserPrompt({
@@ -69,6 +64,7 @@ export async function POST(request: Request) {
         bodyGroups: body_groups,
         parameters: parameters || {},
       }),
+      schema: workoutOutputSchema,
     });
 
     return result.toTextStreamResponse();

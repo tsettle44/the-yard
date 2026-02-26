@@ -18,14 +18,20 @@ export interface WorkoutParameters {
 }
 
 export interface WorkoutStructured {
-  warmup?: object[];
-  blocks?: object[];
-  cooldown?: object[];
+  warmup?: { name: string; detail: string }[];
+  blocks?: {
+    name: string;
+    format: "straight" | "superset" | "circuit" | "emom" | "amrap" | "tabata";
+    exercises: { name: string; sets: string; reps: string; rest: string; note?: string }[];
+    note?: string;
+  }[];
+  cooldown?: { name: string; detail: string }[];
+  coaching?: string[];
 }
 
 export interface Workout {
   id: string;
-  profile_id: string;
+  profile_id: string | null;
   gym_id: string;
   style: WorkoutStyle;
   duration_min: number;
@@ -46,7 +52,7 @@ export interface Workout {
 export type WorkoutInsert = Omit<Workout, "id" | "created_at" | "updated_at">;
 
 export interface GenerateWorkoutRequest {
-  profile_id: string;
+  profile_id: string | null;
   gym_id: string;
   style: WorkoutStyle;
   duration_min: number;
