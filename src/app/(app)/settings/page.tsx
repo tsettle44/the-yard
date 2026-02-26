@@ -3,27 +3,43 @@
 import { useState } from "react";
 import { useTheme } from "next-themes";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useGym } from "@/hooks/use-gym";
+import { EquipmentPicker } from "@/components/gym/equipment-picker";
+import { ConflictEditor } from "@/components/gym/conflict-editor";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { Workout } from "@/types/workout";
+import { EquipmentCategory } from "@/types/gym";
 import { toast } from "sonner";
-import { Download, Upload, Trash2, Eye, EyeOff } from "lucide-react";
+import { Download, Upload, Trash2, Plus, Pencil, Check, X } from "lucide-react";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
-  const [apiKey, setApiKey] = useLocalStorage<string>("the-yard-api-key", "");
-  const [showKey, setShowKey] = useState(false);
-  const [keyInput, setKeyInput] = useState(apiKey);
   const [workouts] = useLocalStorage<Workout[]>("the-yard-workout-history", []);
 
-  function handleSaveKey() {
-    setApiKey(keyInput);
-    toast.success("API key saved");
-  }
+  const {
+    gyms,
+    activeGym,
+    activeGymId,
+    setActiveGymId,
+    createGym,
+    updateGymName,
+    deleteGym,
+    addEquipment,
+    removeEquipment,
+    addConflict,
+    removeConflict,
+    hydrated: gymHydrated,
+  } = useGym();
+
+  const [newGymName, setNewGymName] = useState("");
+  const [editingName, setEditingName] = useState<string | null>(null);
+  const [editNameValue, setEditNameValue] = useState("");
 
   function handleExport() {
     const data = {
@@ -74,6 +90,12 @@ export default function SettingsPage() {
     toast.success("All data cleared. Refresh to reset.");
   }
 
+  function handleCreateGym() {
+    if (!newGymName.trim()) return;
+    createGym(newGymName.trim());
+    setNewGymName("");
+  }
+
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
@@ -81,32 +103,121 @@ export default function SettingsPage() {
         <p className="text-muted-foreground">Manage your preferences and data</p>
       </div>
 
+      {/* Gym Setup */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">API Key</CardTitle>
+          <CardTitle className="text-base">Gym Setup</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Input
-                type={showKey ? "text" : "password"}
-                value={keyInput}
-                onChange={(e) => setKeyInput(e.target.value)}
-                placeholder="sk-ant-..."
-              />
-              <button
-                type="button"
-                onClick={() => setShowKey(!showKey)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
-              >
-                {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-            <Button onClick={handleSaveKey}>Save</Button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Your API key is stored locally in your browser and never sent to our servers.
-          </p>
+        <CardContent className="space-y-4">
+          {!gymHydrated ? (
+            <div className="animate-pulse"><div className="h-32 bg-muted rounded-lg" /></div>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-2 items-center">
+                {gyms.map((gym) => (
+                  <div key={gym.id} className="flex items-center gap-1">
+                    {editingName === gym.id ? (
+                      <>
+                        <Input
+                          value={editNameValue}
+                          onChange={(e) => setEditNameValue(e.target.value)}
+                          className="h-8 w-40"
+                          autoFocus
+                        />
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => {
+                            if (editNameValue.trim()) updateGymName(gym.id, editNameValue.trim());
+                            setEditingName(null);
+                          }}
+                        >
+                          <Check className="h-3 w-3" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditingName(null)}>
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant={activeGymId === gym.id ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setActiveGymId(gym.id)}
+                        className="gap-2"
+                      >
+                        {gym.name}
+                        <Badge variant="secondary" className="ml-1">
+                          {(gym.equipment || []).length}
+                        </Badge>
+                      </Button>
+                    )}
+                    {activeGymId === gym.id && editingName !== gym.id && (
+                      <>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => { setEditingName(gym.id); setEditNameValue(gym.name); }}
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => deleteGym(gym.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                ))}
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={newGymName}
+                    onChange={(e) => setNewGymName(e.target.value)}
+                    placeholder="New gym name..."
+                    className="h-8 w-40"
+                    onKeyDown={(e) => e.key === "Enter" && handleCreateGym()}
+                  />
+                  <Button size="sm" variant="outline" onClick={handleCreateGym} disabled={!newGymName.trim()}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {activeGym ? (
+                <div className="space-y-6">
+                  <EquipmentPicker
+                    gymId={activeGym.id}
+                    currentEquipment={activeGym.equipment || []}
+                    onAdd={(slug, name, category) =>
+                      addEquipment(activeGym.id, {
+                        slug,
+                        name,
+                        category: category as EquipmentCategory,
+                        attributes: {},
+                      })
+                    }
+                    onRemove={(equipmentId) => removeEquipment(activeGym.id, equipmentId)}
+                  />
+                  <ConflictEditor
+                    gymId={activeGym.id}
+                    equipment={activeGym.equipment || []}
+                    conflicts={activeGym.conflicts || []}
+                    onAdd={(a, b, reason) => addConflict(activeGym.id, { equipment_a: a, equipment_b: b, reason })}
+                    onRemove={(conflictId) => removeConflict(activeGym.id, conflictId)}
+                  />
+                </div>
+              ) : (
+                <p className="py-6 text-center text-muted-foreground">
+                  Create a gym to get started with equipment configuration.
+                </p>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
 

@@ -15,9 +15,12 @@ export function useProfiles() {
     "the-yard-active-profile",
     null
   );
+  const [guestMode, setGuestMode] = useLocalStorage<boolean>("the-yard-guest-mode", false);
   const [loading, setLoading] = useState(!config.isSelfHosted);
 
-  const activeProfile = profiles.find((p) => p.id === activeProfileId) || profiles.find((p) => p.is_default) || profiles[0] || null;
+  const activeProfile = guestMode
+    ? null
+    : profiles.find((p) => p.id === activeProfileId) || profiles.find((p) => p.is_default) || profiles[0] || null;
 
   useEffect(() => {
     if (config.isSelfHosted) return;
@@ -92,6 +95,8 @@ export function useProfiles() {
     addProfile,
     updateProfile,
     deleteProfile,
+    guestMode,
+    setGuestMode,
     loading,
     hydrated,
   };

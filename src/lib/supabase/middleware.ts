@@ -38,7 +38,6 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/signup");
   const isPublicRoute =
-    request.nextUrl.pathname === "/" ||
     request.nextUrl.pathname.startsWith("/api/health");
 
   if (!user && !isAuthRoute && !isPublicRoute) {
@@ -49,7 +48,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = "/generate";
+    url.pathname = "/";
     return NextResponse.redirect(url);
   }
 

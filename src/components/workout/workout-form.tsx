@@ -8,9 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
-import { workoutStyles } from "@/lib/ai/styles";
-import { WorkoutStyle, BodyGroup, WorkoutParameters, GenerateWorkoutRequest } from "@/types/workout";
-import { Zap, Loader2 } from "lucide-react";
+import { workoutStyles, getStyleBySlug } from "@/lib/ai/styles";
+import { WorkoutStyle, BodyGroup, GenerateWorkoutRequest } from "@/types/workout";
+import { Zap, Loader2, Info } from "lucide-react";
 
 const bodyGroups: { value: BodyGroup; label: string }[] = [
   { value: "full_body", label: "Full Body" },
@@ -26,11 +26,12 @@ const bodyGroups: { value: BodyGroup; label: string }[] = [
 interface WorkoutFormProps {
   profileId: string | null;
   gymId: string | null;
+  guestMode?: boolean;
   onGenerate: (request: GenerateWorkoutRequest) => void;
   isStreaming: boolean;
 }
 
-export function WorkoutForm({ profileId, gymId, onGenerate, isStreaming }: WorkoutFormProps) {
+export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreaming }: WorkoutFormProps) {
   const [style, setStyle] = useState<WorkoutStyle>("strength");
   const [duration, setDuration] = useState(45);
   const [rpe, setRpe] = useState(7);
@@ -39,8 +40,6 @@ export function WorkoutForm({ profileId, gymId, onGenerate, isStreaming }: Worko
   const [circuits, setCircuits] = useState(false);
   const [dropsets, setDropsets] = useState(false);
   const [notes, setNotes] = useState("");
-
-  const selectedStyle = workoutStyles.find((s) => s.slug === style);
 
   function toggleGroup(group: BodyGroup) {
     setSelectedGroups((prev) => {
@@ -56,9 +55,10 @@ export function WorkoutForm({ profileId, gymId, onGenerate, isStreaming }: Worko
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!profileId || !gymId) return;
+    if (!gymId) return;
+    if (!guestMode && !profileId) return;
     onGenerate({
-      profile_id: profileId,
+      profile_id: guestMode ? null : profileId,
       gym_id: gymId,
       style,
       duration_min: duration,
@@ -73,7 +73,7 @@ export function WorkoutForm({ profileId, gymId, onGenerate, isStreaming }: Worko
     });
   }
 
-  const canGenerate = profileId && gymId && !isStreaming;
+  const canGenerate = (profileId || guestMode) && gymId && !isStreaming;
 
   return (
     <form onSubmit={handleSubmit}>
@@ -82,18 +82,38 @@ export function WorkoutForm({ profileId, gymId, onGenerate, isStreaming }: Worko
           <CardTitle>Generate Workout</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-          {(!profileId || !gymId) && (
+          {guestMode && (
+            <div className="p-3 rounded-md bg-muted text-sm text-muted-foreground flex items-start gap-2">
+              <Info className="h-4 w-4 mt-0.5 shrink-0" />
+              <p>Generating as guest — workout won&apos;t be personalized to a profile.</p>
+            </div>
+          )}
+          {!guestMode && !profileId && (
             <div className="p-3 rounded-md bg-muted text-sm text-muted-foreground">
-              {!profileId && <p>Please create and select a profile first.</p>}
-              {!gymId && <p>Please create and configure a gym first.</p>}
+              <p>Please create and select a profile first.</p>
+            </div>
+          )}
+          {!gymId && (
+            <div className="p-3 rounded-md bg-muted text-sm text-muted-foreground">
+              <p>Please create and configure a gym first.</p>
             </div>
           )}
 
           <div className="space-y-2">
             <Label>Workout Style</Label>
-            <Select value={style} onValueChange={(v) => setStyle(v as WorkoutStyle)}>
+            <Select value={style} onValueChange={(v) => {
+              const newStyle = v as WorkoutStyle;
+              setStyle(newStyle);
+              const def = getStyleBySlug(newStyle);
+              if (def) {
+                setDuration(def.defaultDuration);
+                setRpe(def.defaultRpe);
+              }
+            }}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue>
+                  {getStyleBySlug(style)?.name ?? style}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {workoutStyles.map((s) => (
