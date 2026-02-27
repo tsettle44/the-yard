@@ -1,12 +1,10 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { equipmentRegistry, equipmentCategories, EquipmentDefinition } from "@/lib/equipment/registry";
+import { equipmentRegistry, equipmentCategories } from "@/lib/equipment/registry";
 import { Equipment } from "@/types/gym";
-import { Plus, X } from "lucide-react";
 
 interface EquipmentPickerProps {
   gymId: string;
@@ -24,13 +22,13 @@ export function EquipmentPicker({
   const currentSlugs = new Set(currentEquipment.map((e) => e.slug));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {equipmentCategories.map((category) => {
         const items = equipmentRegistry.filter((e) => e.category === category.value);
         return (
           <Card key={category.value}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">{category.label}</CardTitle>
+              <CardTitle>{category.label}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -39,9 +37,9 @@ export function EquipmentPicker({
                   return (
                     <label
                       key={item.slug}
-                      className={`flex items-center gap-2 p-2 rounded-md border cursor-pointer transition-colors ${
+                      className={`flex items-center gap-2 p-2 border cursor-pointer transition-colors ${
                         isSelected
-                          ? "border-primary bg-primary/5"
+                          ? "border-foreground bg-foreground/5"
                           : "border-transparent hover:bg-accent"
                       }`}
                     >

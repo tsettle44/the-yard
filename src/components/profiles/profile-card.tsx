@@ -1,8 +1,7 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Profile } from "@/types/profile";
 import { Pencil, Trash2, Check } from "lucide-react";
 
@@ -23,25 +22,26 @@ export function ProfileCard({
 }: ProfileCardProps) {
   return (
     <Card
-      className={`cursor-pointer transition-colors ${isActive ? "border-primary" : "hover:border-primary/50"}`}
+      className={`cursor-pointer transition-colors ${isActive ? "border-foreground" : "hover:border-foreground/30"}`}
       onClick={onSelect}
     >
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">{profile.name}</CardTitle>
+          <span className="font-black text-sm uppercase tracking-[0.15em]">{profile.name}</span>
           <div className="flex items-center gap-1">
-            {isActive && <Check className="h-4 w-4 text-primary" />}
-            {profile.is_default && <Badge variant="secondary">Default</Badge>}
+            {isActive && <Check className="h-4 w-4" />}
           </div>
         </div>
       </CardHeader>
       <CardContent className="pb-2">
         <div className="flex flex-wrap gap-1">
-          <Badge variant="outline">{profile.fitness_level}</Badge>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border border-border px-1.5 py-0.5">
+            {profile.fitness_level}
+          </span>
           {profile.preferred_styles.map((style) => (
-            <Badge key={style} variant="outline">
+            <span key={style} className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border border-border px-1.5 py-0.5">
               {style}
-            </Badge>
+            </span>
           ))}
         </div>
         {profile.goals && (
@@ -53,10 +53,10 @@ export function ProfileCard({
       <CardFooter className="pt-0">
         <div className="flex gap-1 ml-auto" onClick={(e) => e.stopPropagation()}>
           <Button size="icon" variant="ghost" onClick={onEdit}>
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-3.5 w-3.5" />
           </Button>
           <Button size="icon" variant="ghost" onClick={onDelete}>
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
       </CardFooter>

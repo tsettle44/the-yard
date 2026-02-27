@@ -2,24 +2,23 @@
 
 import Link from "next/link";
 import { useProfiles } from "@/hooks/use-profile";
-import { Badge } from "@/components/ui/badge";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { activeProfile, guestMode } = useProfiles();
 
-  const profileLabel = guestMode ? "Guest" : activeProfile?.name || null;
+  const profileLabel = guestMode ? "GUEST" : activeProfile?.name?.toUpperCase() || null;
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container flex h-14 max-w-screen-xl items-center px-4">
-          <Link href="/" className="font-bold text-lg mr-2">
+      <header className="border-b border-border bg-background sticky top-0 z-50">
+        <div className="container flex h-12 max-w-screen-xl items-center px-4">
+          <Link href="/" className="font-black text-sm uppercase tracking-[0.2em] mr-4">
             The Yard
           </Link>
           {profileLabel && (
-            <Badge variant="secondary" className="mr-6">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
               {profileLabel}
-            </Badge>
+            </span>
           )}
         </div>
       </header>

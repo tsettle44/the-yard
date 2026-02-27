@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { Workout } from "@/types/workout";
 import { EquipmentCategory } from "@/types/gym";
 import { toast } from "sonner";
@@ -99,18 +98,18 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your preferences and data</p>
+        <h1 className="font-black text-sm uppercase tracking-[0.2em]">Settings</h1>
+        <p className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Manage your preferences and data</p>
       </div>
 
       {/* Gym Setup */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Gym Setup</CardTitle>
+          <CardTitle>Gym Setup</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {!gymHydrated ? (
-            <div className="animate-pulse"><div className="h-32 bg-muted rounded-lg" /></div>
+            <div className="animate-pulse"><div className="h-32 bg-muted" /></div>
           ) : (
             <>
               <div className="flex flex-wrap gap-2 items-center">
@@ -147,9 +146,9 @@ export default function SettingsPage() {
                         className="gap-2"
                       >
                         {gym.name}
-                        <Badge variant="secondary" className="ml-1">
+                        <span className="font-mono text-[10px] ml-1 opacity-60">
                           {(gym.equipment || []).length}
-                        </Badge>
+                        </span>
                       </Button>
                     )}
                     {activeGymId === gym.id && editingName !== gym.id && (
@@ -212,7 +211,7 @@ export default function SettingsPage() {
                   />
                 </div>
               ) : (
-                <p className="py-6 text-center text-muted-foreground">
+                <p className="py-6 text-center text-sm text-muted-foreground">
                   Create a gym to get started with equipment configuration.
                 </p>
               )}
@@ -223,7 +222,7 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Appearance</CardTitle>
+          <CardTitle>Appearance</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -244,18 +243,18 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Data Management</CardTitle>
+          <CardTitle>Data</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground font-mono">
             {workouts.length} workouts saved locally.
           </p>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={handleExport}>
-              <Download className="mr-2 h-4 w-4" /> Export Data
+              <Download className="mr-2 h-4 w-4" /> Export
             </Button>
             <Button variant="outline" onClick={handleImport}>
-              <Upload className="mr-2 h-4 w-4" /> Import Data
+              <Upload className="mr-2 h-4 w-4" /> Import
             </Button>
           </div>
           <Separator />

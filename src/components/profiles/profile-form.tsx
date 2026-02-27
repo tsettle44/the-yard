@@ -116,7 +116,7 @@ export function ProfileForm({
           </div>
 
           <div className="space-y-2">
-            <Label>Preferred Workout Styles</Label>
+            <Label>Preferred Styles</Label>
             <div className="flex flex-wrap gap-2">
               {workoutStyles.filter((s) => s.slug !== "custom").map((style) => (
                 <Button
@@ -138,33 +138,33 @@ export function ProfileForm({
               id="goals"
               value={goals}
               onChange={(e) => setGoals(e.target.value)}
-              placeholder="e.g., Build strength, improve endurance, lose weight..."
+              placeholder="e.g., Build strength, improve endurance"
               rows={2}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="injuries">Injuries / Limitations (comma-separated)</Label>
+            <Label htmlFor="injuries">Injuries / Limitations</Label>
             <Input
               id="injuries"
               value={injuries}
               onChange={(e) => setInjuries(e.target.value)}
-              placeholder="e.g., lower back pain, bad left knee"
+              placeholder="Comma-separated"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="avoided">Exercises to Avoid (comma-separated)</Label>
+            <Label htmlFor="avoided">Exercises to Avoid</Label>
             <Input
               id="avoided"
               value={avoidedExercises}
               onChange={(e) => setAvoidedExercises(e.target.value)}
-              placeholder="e.g., barbell back squat, behind-the-neck press"
+              placeholder="Comma-separated"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Additional Notes</Label>
+            <Label htmlFor="notes">Notes</Label>
             <Textarea
               id="notes"
               value={notes}

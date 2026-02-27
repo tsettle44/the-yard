@@ -10,7 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { workoutStyles, getStyleBySlug } from "@/lib/ai/styles";
 import { WorkoutStyle, BodyGroup, GenerateWorkoutRequest } from "@/types/workout";
-import { Zap, Loader2, Info } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const bodyGroups: { value: BodyGroup; label: string }[] = [
   { value: "full_body", label: "Full Body" },
@@ -83,24 +83,23 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
         </CardHeader>
         <CardContent className="space-y-5">
           {guestMode && (
-            <div className="p-3 rounded-md bg-muted text-sm text-muted-foreground flex items-start gap-2">
-              <Info className="h-4 w-4 mt-0.5 shrink-0" />
-              <p>Generating as guest — workout won&apos;t be personalized to a profile.</p>
+            <div className="p-3 border border-border text-sm text-muted-foreground">
+              Generating as guest — workout won&apos;t be personalized to a profile.
             </div>
           )}
           {!guestMode && !profileId && (
-            <div className="p-3 rounded-md bg-muted text-sm text-muted-foreground">
-              <p>Please create and select a profile first.</p>
+            <div className="p-3 border border-border text-sm text-muted-foreground">
+              Please create and select a profile first.
             </div>
           )}
           {!gymId && (
-            <div className="p-3 rounded-md bg-muted text-sm text-muted-foreground">
-              <p>Please create and configure a gym first.</p>
+            <div className="p-3 border border-border text-sm text-muted-foreground">
+              Please create and configure a gym first.
             </div>
           )}
 
           <div className="space-y-2">
-            <Label>Workout Style</Label>
+            <Label>Style</Label>
             <Select value={style} onValueChange={(v) => {
               const newStyle = v as WorkoutStyle;
               setStyle(newStyle);
@@ -126,7 +125,9 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
           </div>
 
           <div className="space-y-2">
-            <Label>Duration: {duration} minutes</Label>
+            <Label>
+              Duration: <span className="font-mono">{duration}</span> min
+            </Label>
             <Slider
               value={[duration]}
               onValueChange={([v]) => setDuration(v)}
@@ -137,7 +138,9 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
           </div>
 
           <div className="space-y-2">
-            <Label>Target RPE: {rpe}/10</Label>
+            <Label>
+              Target RPE: <span className="font-mono">{rpe}</span>/10
+            </Label>
             <Slider
               value={[rpe]}
               onValueChange={([v]) => setRpe(v)}
@@ -183,12 +186,12 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Additional Instructions</Label>
+            <Label htmlFor="notes">Instructions</Label>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Any specific requests for this workout..."
+              placeholder="Any specific requests..."
               rows={2}
             />
           </div>
@@ -198,7 +201,7 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
             {isStreaming ? (
               <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
             ) : (
-              <><Zap className="mr-2 h-4 w-4" /> Generate Workout</>
+              "Generate Workout"
             )}
           </Button>
         </CardFooter>

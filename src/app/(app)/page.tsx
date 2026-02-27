@@ -7,9 +7,8 @@ import { useProfiles } from "@/hooks/use-profile";
 import { ProfileFormDialog } from "@/components/profiles/profile-form-dialog";
 import { ProfileCard } from "@/components/profiles/profile-card";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Profile } from "@/types/profile";
-import { Plus, Settings, UserX } from "lucide-react";
+import { Plus, Settings } from "lucide-react";
 
 export default function HomePage() {
   const router = useRouter();
@@ -31,10 +30,10 @@ export default function HomePage() {
     return (
       <div className="flex items-center justify-center p-4">
         <div className="animate-pulse space-y-4 w-full max-w-2xl">
-          <div className="h-6 bg-muted rounded-lg w-64 mx-auto" />
+          <div className="h-6 bg-muted w-64 mx-auto" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="h-40 bg-muted rounded-lg" />
-            <div className="h-40 bg-muted rounded-lg" />
+            <div className="h-40 bg-muted" />
+            <div className="h-40 bg-muted" />
           </div>
         </div>
       </div>
@@ -66,11 +65,11 @@ export default function HomePage() {
   return (
     <div className="flex flex-col items-center justify-center p-4">
       <div className="max-w-3xl w-full space-y-8 text-center">
-        <p className="text-lg text-muted-foreground">
+        <p className="text-sm uppercase tracking-widest text-muted-foreground font-medium">
           Who&apos;s working out?
         </p>
 
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {profiles.map((profile) => (
             <ProfileCard
               key={profile.id}
@@ -82,15 +81,15 @@ export default function HomePage() {
             />
           ))}
 
-          <Card
-            className="cursor-pointer border-dashed border-2 hover:border-primary/50 transition-colors flex flex-col items-center justify-center min-h-[140px] gap-2"
+          <div
+            className="cursor-pointer border border-dashed border-border hover:border-foreground/30 transition-colors flex flex-col items-center justify-center min-h-[140px] gap-2"
             onClick={handleCreateProfile}
           >
-            <Plus className="h-10 w-10 text-muted-foreground" />
-            <span className="text-sm font-medium text-muted-foreground">
+            <Plus className="h-8 w-8 text-muted-foreground" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               New Profile
             </span>
-          </Card>
+          </div>
         </div>
 
         <div className="space-y-3">
@@ -100,7 +99,6 @@ export default function HomePage() {
             className="w-full sm:w-auto"
             onClick={handleGuestMode}
           >
-            <UserX className="mr-2 h-4 w-4" />
             Continue as Guest
           </Button>
         </div>
@@ -108,9 +106,9 @@ export default function HomePage() {
         <div>
           <Link
             href="/settings"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors font-medium"
           >
-            <Settings className="h-4 w-4" />
+            <Settings className="h-3.5 w-3.5" />
             Settings
           </Link>
         </div>

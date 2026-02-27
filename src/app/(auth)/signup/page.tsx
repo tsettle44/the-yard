@@ -60,7 +60,7 @@ export default function SignupPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {error && (
-              <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm">
+              <div className="p-3 border border-destructive text-destructive text-sm">
                 {error}
               </div>
             )}
@@ -92,7 +92,7 @@ export default function SignupPage() {
             </Button>
             <p className="text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link href="/login" className="text-primary underline">
+              <Link href="/login" className="underline">
                 Sign in
               </Link>
             </p>

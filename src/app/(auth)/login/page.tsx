@@ -42,7 +42,7 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {error && (
-              <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm">
+              <div className="p-3 border border-destructive text-destructive text-sm">
                 {error}
               </div>
             )}
@@ -73,7 +73,7 @@ export default function LoginPage() {
             </Button>
             <p className="text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}
-              <Link href="/signup" className="text-primary underline">
+              <Link href="/signup" className="underline">
                 Sign up
               </Link>
             </p>

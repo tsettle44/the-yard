@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Workout } from "@/types/workout";
 import { WorkoutView } from "@/components/workout/workout-view";
@@ -31,16 +30,16 @@ export default function HistoryPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Workout History</h1>
-        <p className="text-muted-foreground">
-          Your generated workouts ({workouts.length} total)
+        <h1 className="font-black text-sm uppercase tracking-[0.2em]">History</h1>
+        <p className="text-xs text-muted-foreground uppercase tracking-wider mt-1 font-mono">
+          {workouts.length} workouts
         </p>
       </div>
 
       {workouts.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            No workouts generated yet. Head to Generate to create your first workout.
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            No workouts generated yet.
           </CardContent>
         </Card>
       ) : (
@@ -54,19 +53,21 @@ export default function HistoryPage() {
                 }
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-base">
-                      {workout.style.charAt(0).toUpperCase() + workout.style.slice(1)} — {workout.duration_min}min
-                    </CardTitle>
-                    <Badge variant="outline">RPE {workout.target_rpe}</Badge>
+                  <div className="flex items-center gap-3">
+                    <span className="font-black text-xs uppercase tracking-[0.15em]">
+                      {workout.style} — {workout.duration_min}min
+                    </span>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border border-border px-1.5 py-0.5">
+                      RPE {workout.target_rpe}
+                    </span>
                     {workout.body_groups.map((g) => (
-                      <Badge key={g} variant="secondary">
+                      <span key={g} className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground hidden sm:inline">
                         {g.replace("_", " ")}
-                      </Badge>
+                      </span>
                     ))}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-[10px] text-muted-foreground font-mono">
                       {new Date(workout.created_at).toLocaleDateString()}
                     </span>
                     {expandedId === workout.id ? (
@@ -93,7 +94,7 @@ export default function HistoryPage() {
                       error={null}
                     />
                   )}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between border-t border-border pt-3">
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
@@ -104,8 +105,8 @@ export default function HistoryPage() {
                           <Star
                             className={`h-4 w-4 ${
                               workout.rating && star <= workout.rating
-                                ? "fill-yellow-400 text-yellow-400"
-                                : "text-muted-foreground"
+                                ? "fill-foreground text-foreground"
+                                : "text-muted-foreground/30"
                             }`}
                           />
                         </button>
@@ -116,7 +117,7 @@ export default function HistoryPage() {
                       variant="ghost"
                       onClick={() => handleDelete(workout.id)}
                     >
-                      <Trash2 className="h-4 w-4 mr-1" /> Delete
+                      <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
                     </Button>
                   </div>
                 </CardContent>

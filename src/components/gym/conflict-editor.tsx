@@ -44,7 +44,7 @@ export function ConflictEditor({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Equipment Conflicts</CardTitle>
+          <CardTitle>Equipment Conflicts</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
@@ -58,9 +58,9 @@ export function ConflictEditor({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Equipment Conflicts</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Mark equipment that can&apos;t be used at the same time (e.g., share the same space or mount).
+        <CardTitle>Equipment Conflicts</CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Mark equipment that can&apos;t be used at the same time.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -69,18 +69,18 @@ export function ConflictEditor({
             {conflicts.map((conflict) => (
               <div
                 key={conflict.id}
-                className="flex items-center justify-between p-2 rounded-md bg-muted"
+                className="flex items-center justify-between p-2 border border-border"
               >
                 <div className="text-sm">
-                  <span className="font-medium">
+                  <span className="font-semibold">
                     {getEquipmentName(conflict.equipment_a)}
                   </span>
-                  {" <-> "}
-                  <span className="font-medium">
+                  {" / "}
+                  <span className="font-semibold">
                     {getEquipmentName(conflict.equipment_b)}
                   </span>
                   {conflict.reason && (
-                    <span className="text-muted-foreground ml-2">
+                    <span className="text-muted-foreground ml-2 text-xs">
                       ({conflict.reason})
                     </span>
                   )}
@@ -99,7 +99,7 @@ export function ConflictEditor({
 
         <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end">
           <div className="space-y-1">
-            <Label className="text-xs">Equipment A</Label>
+            <Label>Equipment A</Label>
             <Select value={eqA} onValueChange={setEqA}>
               <SelectTrigger>
                 <SelectValue placeholder="Select..." />
@@ -114,7 +114,7 @@ export function ConflictEditor({
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Equipment B</Label>
+            <Label>Equipment B</Label>
             <Select value={eqB} onValueChange={setEqB}>
               <SelectTrigger>
                 <SelectValue placeholder="Select..." />
@@ -129,7 +129,7 @@ export function ConflictEditor({
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Reason</Label>
+            <Label>Reason</Label>
             <Input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
