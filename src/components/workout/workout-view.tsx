@@ -183,7 +183,7 @@ export function WorkoutView({ workout, isStreaming, error, onSave, onBack }: Wor
   );
 
   return (
-    <div className="pb-24">
+    <div className="pb-24 w-full">
       {/* Top bar */}
       <div className="flex items-center gap-3 mb-6">
         <Button variant="ghost" size="sm" onClick={onBack} className="text-xs">

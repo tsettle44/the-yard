@@ -4,9 +4,9 @@ import { useRef, useState } from "react";
 import { useProfiles } from "@/hooks/use-profile";
 import { useGym } from "@/hooks/use-gym";
 import { useWorkoutStream } from "@/hooks/use-workout-stream";
+import { useWorkouts } from "@/hooks/use-workouts";
 import { WorkoutForm } from "@/components/workout/workout-form";
 import { WorkoutView } from "@/components/workout/workout-view";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Workout, GenerateWorkoutRequest } from "@/types/workout";
 import { toast } from "sonner";
 
@@ -14,10 +14,7 @@ export default function GeneratePage() {
   const { activeProfile, guestMode, hydrated: profilesHydrated } = useProfiles();
   const { activeGym, hydrated: gymsHydrated } = useGym();
   const { workout, rawJson, isStreaming, error, generate, reset } = useWorkoutStream();
-  const [, setWorkoutHistory] = useLocalStorage<Workout[]>(
-    "the-yard-workout-history",
-    []
-  );
+  const { addWorkout } = useWorkouts();
   const lastRequestRef = useRef<GenerateWorkoutRequest | null>(null);
   const [view, setView] = useState<"form" | "workout">("form");
 
@@ -33,7 +30,8 @@ export default function GeneratePage() {
       request,
       profileData: activeProfile || undefined,
       equipmentData: activeGym?.equipment || [],
-      conflictsData: activeGym?.conflicts || [],
+      sharedResourcesData: activeGym?.shared_resources || [],
+      layoutNotes: activeGym?.layout_notes || "",
     });
     setView("workout");
   }
@@ -68,7 +66,7 @@ export default function GeneratePage() {
       updated_at: new Date().toISOString(),
     };
 
-    setWorkoutHistory((prev) => [workoutRecord, ...prev]);
+    addWorkout(workoutRecord);
     toast.success("Workout saved to history");
   }
 

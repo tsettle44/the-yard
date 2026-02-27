@@ -5,6 +5,8 @@ import { useLocalStorage } from "./use-local-storage";
 import { Profile, ProfileInsert } from "@/types/profile";
 import { config } from "@/lib/config";
 
+const isHosted = config.isHosted;
+
 function generateId() {
   return crypto.randomUUID();
 }
@@ -16,15 +18,15 @@ export function useProfiles() {
     null
   );
   const [guestMode, setGuestMode] = useLocalStorage<boolean>("the-yard-guest-mode", false);
-  const [loading, setLoading] = useState(!config.isSelfHosted);
+  const [loading, setLoading] = useState(isHosted);
 
   const activeProfile = guestMode
     ? null
     : profiles.find((p) => p.id === activeProfileId) || profiles.find((p) => p.is_default) || profiles[0] || null;
 
+  // In hosted mode, fetch profiles from API on mount
   useEffect(() => {
-    if (config.isSelfHosted) return;
-    // In hosted mode, fetch profiles from Supabase
+    if (!isHosted) return;
     async function fetchProfiles() {
       try {
         const res = await fetch("/api/profiles");
@@ -51,15 +53,37 @@ export function useProfiles() {
         created_at: now,
         updated_at: now,
       };
+
       setProfiles((prev) => {
         if (profile.is_default) {
           return [...prev.map((p) => ({ ...p, is_default: false })), profile];
         }
         return [...prev, profile];
       });
+
+      if (isHosted) {
+        fetch("/api/profiles", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        })
+          .then((res) => res.json())
+          .then((serverProfile) => {
+            // Replace optimistic profile with server version (gets real UUID)
+            setProfiles((prev) =>
+              prev.map((p) => (p.id === profile.id ? { ...serverProfile } : p))
+            );
+            // Update active profile ID if it was pointing to the optimistic ID
+            setActiveProfileId((prev) =>
+              prev === profile.id ? serverProfile.id : prev
+            );
+          })
+          .catch((err) => console.error("Failed to save profile:", err));
+      }
+
       return profile;
     },
-    [setProfiles]
+    [setProfiles, setActiveProfileId]
   );
 
   const updateProfile = useCallback(
@@ -73,6 +97,14 @@ export function useProfiles() {
           return { ...p, ...data, updated_at: new Date().toISOString() };
         })
       );
+
+      if (isHosted) {
+        fetch(`/api/profiles/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }).catch((err) => console.error("Failed to update profile:", err));
+      }
     },
     [setProfiles]
   );
@@ -82,6 +114,12 @@ export function useProfiles() {
       setProfiles((prev) => prev.filter((p) => p.id !== id));
       if (activeProfileId === id) {
         setActiveProfileId(null);
+      }
+
+      if (isHosted) {
+        fetch(`/api/profiles/${id}`, { method: "DELETE" }).catch((err) =>
+          console.error("Failed to delete profile:", err)
+        );
       }
     },
     [setProfiles, activeProfileId, setActiveProfileId]

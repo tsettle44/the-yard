@@ -43,10 +43,10 @@ CREATE TABLE equipment_conflicts (
   UNIQUE (equipment_a, equipment_b)
 );
 
--- Workouts
+-- Workouts (profile_id nullable for guest mode)
 CREATE TABLE workouts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   gym_id UUID NOT NULL REFERENCES gyms(id) ON DELETE CASCADE,
   style TEXT NOT NULL,
   duration_min INTEGER NOT NULL,
@@ -130,18 +130,22 @@ CREATE POLICY equipment_conflicts_delete ON equipment_conflicts FOR DELETE USING
   EXISTS (SELECT 1 FROM gyms WHERE gyms.id = equipment_conflicts.gym_id AND (gyms.user_id = auth.uid() OR gyms.user_id IS NULL))
 );
 
--- Workouts
+-- Workouts: access via profile or gym ownership (supports null profile_id for guest mode)
 CREATE POLICY workouts_select ON workouts FOR SELECT USING (
   EXISTS (SELECT 1 FROM profiles WHERE profiles.id = workouts.profile_id AND (profiles.user_id = auth.uid() OR profiles.user_id IS NULL))
+  OR (profile_id IS NULL AND EXISTS (SELECT 1 FROM gyms WHERE gyms.id = workouts.gym_id AND (gyms.user_id = auth.uid() OR gyms.user_id IS NULL)))
 );
 CREATE POLICY workouts_insert ON workouts FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM profiles WHERE profiles.id = workouts.profile_id AND (profiles.user_id = auth.uid() OR profiles.user_id IS NULL))
+  OR (profile_id IS NULL AND EXISTS (SELECT 1 FROM gyms WHERE gyms.id = workouts.gym_id AND (gyms.user_id = auth.uid() OR gyms.user_id IS NULL)))
 );
 CREATE POLICY workouts_update ON workouts FOR UPDATE USING (
   EXISTS (SELECT 1 FROM profiles WHERE profiles.id = workouts.profile_id AND (profiles.user_id = auth.uid() OR profiles.user_id IS NULL))
+  OR (profile_id IS NULL AND EXISTS (SELECT 1 FROM gyms WHERE gyms.id = workouts.gym_id AND (gyms.user_id = auth.uid() OR gyms.user_id IS NULL)))
 );
 CREATE POLICY workouts_delete ON workouts FOR DELETE USING (
   EXISTS (SELECT 1 FROM profiles WHERE profiles.id = workouts.profile_id AND (profiles.user_id = auth.uid() OR profiles.user_id IS NULL))
+  OR (profile_id IS NULL AND EXISTS (SELECT 1 FROM gyms WHERE gyms.id = workouts.gym_id AND (gyms.user_id = auth.uid() OR gyms.user_id IS NULL)))
 );
 
 -- Payments & entitlements

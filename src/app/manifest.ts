@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "The Yard — AI Workout Generator",
     short_name: "The Yard",
     description: "AI-powered workout generator for your home gym",
-    start_url: "/generate",
+    start_url: "/",
     display: "standalone",
     background_color: "#000000",
     theme_color: "#000000",

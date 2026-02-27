@@ -3,14 +3,15 @@
 import { useState, useCallback } from "react";
 import { GenerateWorkoutRequest } from "@/types/workout";
 import { Profile } from "@/types/profile";
-import { Equipment, EquipmentConflict } from "@/types/gym";
+import { Equipment, SharedResourceGroup } from "@/types/gym";
 import type { WorkoutOutput } from "@/lib/ai/schemas";
 
 interface GenerateOptions {
   request: GenerateWorkoutRequest;
   profileData?: Profile;
   equipmentData?: Equipment[];
-  conflictsData?: EquipmentConflict[];
+  sharedResourcesData?: SharedResourceGroup[];
+  layoutNotes?: string;
 }
 
 interface UseWorkoutStreamReturn {
@@ -101,7 +102,7 @@ export function useWorkoutStream(): UseWorkoutStreamReturn {
   }, []);
 
   const generate = useCallback(
-    async ({ request, profileData, equipmentData, conflictsData }: GenerateOptions) => {
+    async ({ request, profileData, equipmentData, sharedResourcesData, layoutNotes }: GenerateOptions) => {
       setWorkout(null);
       setRawJson("");
       setError(null);
@@ -117,7 +118,8 @@ export function useWorkoutStream(): UseWorkoutStreamReturn {
             ...request,
             profile_data: profileData,
             equipment_data: equipmentData,
-            conflicts_data: conflictsData,
+            shared_resources_data: sharedResourcesData,
+            layout_notes: layoutNotes,
           }),
         });
 

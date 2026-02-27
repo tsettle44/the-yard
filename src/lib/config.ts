@@ -1,7 +1,7 @@
 export type DeploymentMode = "self-hosted" | "hosted";
 
 export const config = {
-  deploymentMode: (process.env.DEPLOYMENT_MODE || "self-hosted") as DeploymentMode,
+  deploymentMode: (process.env.NEXT_PUBLIC_DEPLOYMENT_MODE || process.env.DEPLOYMENT_MODE || "self-hosted") as DeploymentMode,
 
   get isSelfHosted() {
     return this.deploymentMode === "self-hosted";

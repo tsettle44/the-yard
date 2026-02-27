@@ -1,4 +1,4 @@
-import { EquipmentCategory } from "@/types/gym";
+import { EquipmentCategory, ResourceConstraint } from "@/types/gym";
 
 export interface EquipmentDefinition {
   slug: string;
@@ -58,6 +58,44 @@ export function getEquipmentByCategory(category: EquipmentCategory): EquipmentDe
 
 export function getEquipmentBySlug(slug: string): EquipmentDefinition | undefined {
   return equipmentRegistry.find((e) => e.slug === slug);
+}
+
+export interface ResourceSuggestion {
+  resource_name: string;
+  equipment_slugs: string[];
+  constraint: ResourceConstraint;
+  reason: string;
+}
+
+export const resourceSuggestions: ResourceSuggestion[] = [
+  {
+    resource_name: "Barbell Station",
+    equipment_slugs: ["barbell", "squat-rack", "bench-press", "weight-plates"],
+    constraint: "group_together",
+    reason: "These all share the same barbell — group exercises together to avoid reloading",
+  },
+  {
+    resource_name: "Cable / Lat Pulldown",
+    equipment_slugs: ["cable-machine", "lat-pulldown"],
+    constraint: "no_superset",
+    reason: "Often the same machine or adjacent stations that share weight stacks",
+  },
+  {
+    resource_name: "Floor Space",
+    equipment_slugs: ["barbell", "trap-bar", "kettlebells", "sandbag"],
+    constraint: "needs_setup_change",
+    reason: "Floor-based movements need the same open area — transitions require clearing",
+  },
+];
+
+/**
+ * Returns suggestions that match at least 2 of the user's currently selected equipment slugs.
+ */
+export function getApplicableSuggestions(selectedSlugs: string[]): ResourceSuggestion[] {
+  const slugSet = new Set(selectedSlugs);
+  return resourceSuggestions.filter(
+    (s) => s.equipment_slugs.filter((slug) => slugSet.has(slug)).length >= 2
+  );
 }
 
 export const equipmentCategories: { value: EquipmentCategory; label: string }[] = [

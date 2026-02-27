@@ -21,14 +21,30 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
+    if (!email.trim()) {
+      setError("Please enter your email address.");
+      setLoading(false);
+      return;
+    }
+
+    if (!password) {
+      setError("Please enter your password.");
+      setLoading(false);
+      return;
+    }
+
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      setError(error.message);
+      setError(
+        error.message.includes("email or phone")
+          ? "Please enter a valid email address."
+          : error.message
+      );
       setLoading(false);
     } else {
-      router.push("/generate");
+      router.push("/");
       router.refresh();
     }
   }

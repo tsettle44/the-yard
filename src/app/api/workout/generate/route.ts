@@ -4,7 +4,7 @@ import { buildSystemPrompt, buildUserPrompt } from "@/lib/ai/prompts";
 import { generateWorkoutSchema, workoutOutputSchema } from "@/lib/ai/schemas";
 import { config } from "@/lib/config";
 import { Profile } from "@/types/profile";
-import { Equipment, EquipmentConflict } from "@/types/gym";
+import { Equipment, SharedResourceGroup } from "@/types/gym";
 
 export const maxDuration = 60;
 
@@ -48,7 +48,8 @@ export async function POST(request: Request) {
     };
 
     const equipment: Equipment[] = body.equipment_data || [];
-    const conflicts: EquipmentConflict[] = body.conflicts_data || [];
+    const sharedResources: SharedResourceGroup[] = body.shared_resources_data || [];
+    const layoutNotes: string = body.layout_notes || "";
 
     const anthropic = getAIClient(apiKey);
     const result = streamObject({
@@ -57,7 +58,8 @@ export async function POST(request: Request) {
       prompt: buildUserPrompt({
         profile,
         equipment,
-        conflicts,
+        sharedResources,
+        layoutNotes,
         style,
         durationMin: duration_min,
         targetRpe: target_rpe,

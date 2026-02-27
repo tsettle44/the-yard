@@ -2,24 +2,28 @@
 
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useProfiles } from "@/hooks/use-profile";
 import { useGym } from "@/hooks/use-gym";
+import { useWorkouts } from "@/hooks/use-workouts";
 import { EquipmentPicker } from "@/components/gym/equipment-picker";
-import { ConflictEditor } from "@/components/gym/conflict-editor";
+import { SharedResourceEditor } from "@/components/gym/shared-resource-editor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Workout } from "@/types/workout";
 import { EquipmentCategory } from "@/types/gym";
+import { getApplicableSuggestions } from "@/lib/equipment/registry";
+import { config } from "@/lib/config";
 import { toast } from "sonner";
 import { Download, Upload, Trash2, Plus, Pencil, Check, X } from "lucide-react";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
-  const [workouts] = useLocalStorage<Workout[]>("the-yard-workout-history", []);
+  const { profiles } = useProfiles();
+  const { workouts } = useWorkouts();
 
   const {
     gyms,
@@ -31,8 +35,10 @@ export default function SettingsPage() {
     deleteGym,
     addEquipment,
     removeEquipment,
-    addConflict,
-    removeConflict,
+    updateEquipmentQuantity,
+    addSharedResource,
+    removeSharedResource,
+    updateLayoutNotes,
     hydrated: gymHydrated,
   } = useGym();
 
@@ -40,11 +46,15 @@ export default function SettingsPage() {
   const [editingName, setEditingName] = useState<string | null>(null);
   const [editNameValue, setEditNameValue] = useState("");
 
+  const currentEquipment = activeGym?.equipment || [];
+  const suggestions = getApplicableSuggestions(currentEquipment.map((e) => e.slug));
+
   function handleExport() {
+    // In hosted mode, export the in-memory data (already fetched from DB)
     const data = {
-      profiles: JSON.parse(localStorage.getItem("the-yard-profiles") || "[]"),
-      gyms: JSON.parse(localStorage.getItem("the-yard-gyms") || "[]"),
-      workouts: JSON.parse(localStorage.getItem("the-yard-workout-history") || "[]"),
+      profiles,
+      gyms,
+      workouts,
       exportedAt: new Date().toISOString(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], {
@@ -60,6 +70,11 @@ export default function SettingsPage() {
   }
 
   function handleImport() {
+    if (config.isHosted) {
+      toast.error("Import is not supported in hosted mode. Data is managed through your account.");
+      return;
+    }
+
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".json";
@@ -81,11 +96,17 @@ export default function SettingsPage() {
   }
 
   function handleClearData() {
+    if (config.isHosted) {
+      toast.error("Use your account settings to manage data in hosted mode.");
+      return;
+    }
+
     localStorage.removeItem("the-yard-profiles");
     localStorage.removeItem("the-yard-gyms");
     localStorage.removeItem("the-yard-workout-history");
     localStorage.removeItem("the-yard-active-profile");
     localStorage.removeItem("the-yard-active-gym");
+    localStorage.removeItem("the-yard-gym-schema-version");
     toast.success("All data cleared. Refresh to reset.");
   }
 
@@ -96,7 +117,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 w-full">
       <div>
         <h1 className="font-black text-sm uppercase tracking-[0.2em]">Settings</h1>
         <p className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Manage your preferences and data</p>
@@ -191,7 +212,7 @@ export default function SettingsPage() {
                 <div className="space-y-6">
                   <EquipmentPicker
                     gymId={activeGym.id}
-                    currentEquipment={activeGym.equipment || []}
+                    currentEquipment={currentEquipment}
                     onAdd={(slug, name, category) =>
                       addEquipment(activeGym.id, {
                         slug,
@@ -201,13 +222,38 @@ export default function SettingsPage() {
                       })
                     }
                     onRemove={(equipmentId) => removeEquipment(activeGym.id, equipmentId)}
+                    onUpdateQuantity={(equipmentId, quantity) =>
+                      updateEquipmentQuantity(activeGym.id, equipmentId, quantity)
+                    }
                   />
-                  <ConflictEditor
+
+                  {/* Layout Notes */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Gym Layout Notes</CardTitle>
+                      <p className="text-xs text-muted-foreground">
+                        Describe your gym layout to help the AI plan better transitions.
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      <Textarea
+                        value={activeGym.layout_notes || ""}
+                        onChange={(e) => updateLayoutNotes(activeGym.id, e.target.value)}
+                        placeholder="e.g. Small garage gym, squat rack is against the wall, bench slides under the rack when not in use. Barbell stays on the rack most of the time."
+                        rows={3}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  <SharedResourceEditor
                     gymId={activeGym.id}
-                    equipment={activeGym.equipment || []}
-                    conflicts={activeGym.conflicts || []}
-                    onAdd={(a, b, reason) => addConflict(activeGym.id, { equipment_a: a, equipment_b: b, reason })}
-                    onRemove={(conflictId) => removeConflict(activeGym.id, conflictId)}
+                    equipment={currentEquipment}
+                    sharedResources={activeGym.shared_resources || []}
+                    suggestions={suggestions}
+                    onAdd={(data) =>
+                      addSharedResource(activeGym.id, data)
+                    }
+                    onRemove={(resourceId) => removeSharedResource(activeGym.id, resourceId)}
                   />
                 </div>
               ) : (
@@ -247,20 +293,26 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground font-mono">
-            {workouts.length} workouts saved locally.
+            {workouts.length} workouts saved{config.isHosted ? "" : " locally"}.
           </p>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={handleExport}>
               <Download className="mr-2 h-4 w-4" /> Export
             </Button>
-            <Button variant="outline" onClick={handleImport}>
-              <Upload className="mr-2 h-4 w-4" /> Import
-            </Button>
+            {!config.isHosted && (
+              <Button variant="outline" onClick={handleImport}>
+                <Upload className="mr-2 h-4 w-4" /> Import
+              </Button>
+            )}
           </div>
-          <Separator />
-          <Button variant="destructive" onClick={handleClearData}>
-            <Trash2 className="mr-2 h-4 w-4" /> Clear All Data
-          </Button>
+          {!config.isHosted && (
+            <>
+              <Separator />
+              <Button variant="destructive" onClick={handleClearData}>
+                <Trash2 className="mr-2 h-4 w-4" /> Clear All Data
+              </Button>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -28,8 +28,8 @@ export default function HomePage() {
 
   if (!hydrated) {
     return (
-      <div className="flex items-center justify-center p-4">
-        <div className="animate-pulse space-y-4 w-full max-w-2xl">
+      <div className="flex items-center justify-center">
+        <div className="animate-pulse space-y-4 w-full">
           <div className="h-6 bg-muted w-64 mx-auto" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="h-40 bg-muted" />
@@ -63,8 +63,8 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center p-4">
-      <div className="max-w-3xl w-full space-y-8 text-center">
+    <div className="flex flex-col items-center justify-center">
+      <div className="w-full space-y-8 text-center">
         <p className="text-sm uppercase tracking-widest text-muted-foreground font-medium">
           Who&apos;s working out?
         </p>

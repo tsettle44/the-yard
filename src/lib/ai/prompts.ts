@@ -1,11 +1,12 @@
 import { Profile } from "@/types/profile";
-import { Equipment, EquipmentConflict } from "@/types/gym";
+import { Equipment, SharedResourceGroup } from "@/types/gym";
 import { WorkoutStyle, BodyGroup, WorkoutParameters } from "@/types/workout";
 
 interface PromptContext {
   profile: Profile;
   equipment: Equipment[];
-  conflicts: EquipmentConflict[];
+  sharedResources: SharedResourceGroup[];
+  layoutNotes: string;
   style: WorkoutStyle;
   durationMin: number;
   targetRpe: number;
@@ -14,38 +15,70 @@ interface PromptContext {
 }
 
 export function buildSystemPrompt(): string {
-  return `You are an expert personal trainer and workout programmer. You create detailed, safe, and effective workouts tailored to the user's equipment, fitness level, and goals.
+  return `You are an expert personal trainer and workout programmer for home gyms. You create detailed, safe, and effective workouts tailored to the user's equipment, fitness level, and goals.
 
-Rules:
-- Only use equipment the user has listed. Never suggest equipment they don't have.
-- Respect equipment conflicts: if two pieces of equipment conflict, never program them in the same superset or circuit block.
+CRITICAL RULES — EQUIPMENT CONSTRAINTS (you MUST follow these):
+
+1. Only use equipment the user has listed. Never suggest equipment they don't have.
+
+2. Equipment quantities matter. If the user has 1 barbell, you CANNOT superset or circuit two exercises that both need that barbell. They must be done as straight sets, one after the other.
+
+3. Shared resource constraints are HARD RULES, not suggestions. You must obey every one:
+
+   NEVER TOGETHER: Pick only ONE piece of equipment from this group for the entire workout. Do NOT include exercises from multiple items in a "never_together" group. This is the strictest constraint — treat it as an absolute ban.
+
+   NO SUPERSET: Equipment in this group must NEVER appear in the same superset or circuit block. They CAN both appear in the workout, but always in separate straight-set blocks.
+
+   GROUP TOGETHER: All exercises using equipment from this group must be scheduled in the same block or in consecutive blocks. Do not scatter them across the workout. Put compound movements first, then accessories.
+
+   NEEDS SETUP CHANGE: These can follow each other but transitions are costly. Minimize back-and-forth. When a transition happens, add a note to the exercise (e.g. "Clear barbell, set up trap bar").
+
+4. Minimize total equipment transitions across the entire workout. Think about the physical flow: group exercises by station so the user isn't walking back and forth.
+
+5. When a setup change is needed between exercises, note it in the exercise note field.
+
+OTHER RULES:
 - Include warm-up and cool-down unless the user opts out.
 - Provide sets, reps (or time), and rest periods for every exercise.
 - Scale intensity to the target RPE.
 - Use proper exercise names and include brief form cues for non-obvious movements.
 
-Output guidance:
+OUTPUT FORMAT:
 - Organize the main workout into logical blocks (e.g. "Block A — Chest & Triceps").
-- Label each block with the correct format: "straight" for standard sets, "superset" for paired exercises, "circuit" for 3+ exercises cycled, or "emom"/"amrap"/"tabata" for timed formats.
+- Label each block format: "straight", "superset", "circuit", "emom", "amrap", or "tabata".
 - Keep sets, reps, and rest as short strings (e.g. "3", "8-10", "60s").
 - Provide 2-4 concise, actionable coaching tips specific to this workout.`;
 }
 
 export function buildUserPrompt(ctx: PromptContext): string {
   const equipmentList = ctx.equipment
-    .map((e) => `- ${e.name} (${e.category})`)
+    .map((e) => {
+      const qty = e.quantity > 1 ? ` x${e.quantity}` : "";
+      return `- ${e.name}${qty} (${e.category})`;
+    })
     .join("\n");
 
-  const conflictList =
-    ctx.conflicts.length > 0
-      ? ctx.conflicts
-          .map((c) => {
-            const eqA = ctx.equipment.find((e) => e.id === c.equipment_a);
-            const eqB = ctx.equipment.find((e) => e.id === c.equipment_b);
-            return `- ${eqA?.name || c.equipment_a} <-> ${eqB?.name || c.equipment_b}: ${c.reason}`;
+  const constraintLabel: Record<string, string> = {
+    never_together: "NEVER TOGETHER — only use ONE of these in the entire workout, exclude the rest completely",
+    no_superset: "NO SUPERSET — never pair in same superset/circuit, but both can appear in separate straight-set blocks",
+    group_together: "GROUP TOGETHER — schedule all exercises using these back-to-back in the same block",
+    needs_setup_change: "NEEDS SETUP CHANGE — minimize transitions between these, add setup notes when switching",
+  };
+
+  const sharedResourcesSection =
+    ctx.sharedResources.length > 0
+      ? ctx.sharedResources
+          .map((sr) => {
+            const eqNames = sr.equipment_ids
+              .map((id) => ctx.equipment.find((e) => e.id === id)?.name || id)
+              .join(", ");
+            const notesStr = sr.notes ? ` (${sr.notes})` : "";
+            return `- ${sr.resource_name}: [${eqNames}] → ${constraintLabel[sr.constraint] || sr.constraint}${notesStr}`;
           })
           .join("\n")
-      : "None";
+      : "None defined";
+
+  const layoutSection = ctx.layoutNotes?.trim() || "No layout notes provided";
 
   const bodyGroupsStr = ctx.bodyGroups.join(", ");
 
@@ -91,8 +124,11 @@ ${paramLines.length > 0 ? paramLines.map((l) => `- ${l}`).join("\n") : ""}
 **Available Equipment:**
 ${equipmentList || "Bodyweight only"}
 
-**Equipment Conflicts (cannot be used in same superset/circuit):**
-${conflictList}
+**Shared Resources & Constraints (MUST OBEY):**
+${sharedResourcesSection}
 
-Please generate a complete workout with warm-up, main workout blocks, and cool-down.`;
+**Gym Layout:**
+${layoutSection}
+
+Generate a complete workout with warm-up, main workout blocks, and cool-down. You MUST respect every shared resource constraint listed above — these represent physical limitations of the gym that cannot be ignored.`;
 }

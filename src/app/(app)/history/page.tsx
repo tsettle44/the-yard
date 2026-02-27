@@ -1,34 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useWorkouts } from "@/hooks/use-workouts";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Workout } from "@/types/workout";
 import { WorkoutView } from "@/components/workout/workout-view";
 import { WorkoutStream } from "@/components/workout/workout-stream";
 import type { WorkoutOutput } from "@/lib/ai/schemas";
 import { Trash2, ChevronDown, ChevronUp, Star } from "lucide-react";
 
 export default function HistoryPage() {
-  const [workouts, setWorkouts] = useLocalStorage<Workout[]>(
-    "the-yard-workout-history",
-    []
-  );
+  const { workouts, deleteWorkout, rateWorkout } = useWorkouts();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  function handleDelete(id: string) {
-    setWorkouts((prev) => prev.filter((w) => w.id !== id));
-  }
-
-  function handleRate(id: string, rating: number) {
-    setWorkouts((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, rating } : w))
-    );
-  }
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       <div>
         <h1 className="font-black text-sm uppercase tracking-[0.2em]">History</h1>
         <p className="text-xs text-muted-foreground uppercase tracking-wider mt-1 font-mono">
@@ -99,7 +85,7 @@ export default function HistoryPage() {
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
                           key={star}
-                          onClick={() => handleRate(workout.id, star)}
+                          onClick={() => rateWorkout(workout.id, star)}
                           className="p-1"
                         >
                           <Star
@@ -115,7 +101,7 @@ export default function HistoryPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => handleDelete(workout.id)}
+                      onClick={() => deleteWorkout(workout.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
                     </Button>
