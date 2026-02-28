@@ -3,7 +3,7 @@ import { z } from "zod";
 export const generateWorkoutSchema = z.object({
   profile_id: z.string().min(1),
   gym_id: z.string().min(1),
-  style: z.enum(["strength", "hiit", "circuit", "emom", "amrap", "tabata", "custom"]),
+  style: z.enum(["strength", "hiit", "circuit", "emom", "amrap", "tabata", "crossfit", "hyrox", "custom"]),
   duration_min: z.number().min(5).max(180),
   target_rpe: z.number().min(1).max(10),
   body_groups: z.array(

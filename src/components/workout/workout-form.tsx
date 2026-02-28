@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { workoutStyles, getStyleBySlug } from "@/lib/ai/styles";
 import { WorkoutStyle, BodyGroup, GenerateWorkoutRequest } from "@/types/workout";
@@ -22,6 +20,8 @@ const bodyGroups: { value: BodyGroup; label: string }[] = [
   { value: "legs", label: "Legs" },
   { value: "glutes", label: "Glutes" },
 ];
+
+const durationOptions = [15, 20, 30, 45, 60, 75, 90, 120];
 
 interface WorkoutFormProps {
   profileId: string | null;
@@ -40,6 +40,15 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
   const [circuits, setCircuits] = useState(false);
   const [dropsets, setDropsets] = useState(false);
   const [notes, setNotes] = useState("");
+
+  function selectStyle(slug: WorkoutStyle) {
+    setStyle(slug);
+    const def = getStyleBySlug(slug);
+    if (def) {
+      setDuration(def.defaultDuration);
+      setRpe(def.defaultRpe);
+    }
+  }
 
   function toggleGroup(group: BodyGroup) {
     setSelectedGroups((prev) => {
@@ -100,54 +109,58 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
 
           <div className="space-y-2">
             <Label>Style</Label>
-            <Select value={style} onValueChange={(v) => {
-              const newStyle = v as WorkoutStyle;
-              setStyle(newStyle);
-              const def = getStyleBySlug(newStyle);
-              if (def) {
-                setDuration(def.defaultDuration);
-                setRpe(def.defaultRpe);
-              }
-            }}>
-              <SelectTrigger>
-                <SelectValue>
-                  {getStyleBySlug(style)?.name ?? style}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {workoutStyles.map((s) => (
-                  <SelectItem key={s.slug} value={s.slug}>
-                    {s.name} — {s.description}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap gap-2">
+              {workoutStyles.map((s) => (
+                <Button
+                  key={s.slug}
+                  type="button"
+                  size="sm"
+                  variant={style === s.slug ? "default" : "outline"}
+                  onClick={() => selectStyle(s.slug)}
+                >
+                  {s.name}
+                </Button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {getStyleBySlug(style)?.description}
+            </p>
           </div>
 
           <div className="space-y-2">
-            <Label>
-              Duration: <span className="font-mono">{duration}</span> min
-            </Label>
-            <Slider
-              value={[duration]}
-              onValueChange={([v]) => setDuration(v)}
-              min={10}
-              max={120}
-              step={5}
-            />
+            <Label>Duration (min)</Label>
+            <div className="flex flex-wrap gap-2">
+              {durationOptions.map((d) => (
+                <Button
+                  key={d}
+                  type="button"
+                  size="sm"
+                  variant={duration === d ? "default" : "outline"}
+                  onClick={() => setDuration(d)}
+                  className="min-w-[3rem]"
+                >
+                  {d}
+                </Button>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label>
-              Target RPE: <span className="font-mono">{rpe}</span>/10
-            </Label>
-            <Slider
-              value={[rpe]}
-              onValueChange={([v]) => setRpe(v)}
-              min={1}
-              max={10}
-              step={1}
-            />
+            <Label>Target RPE</Label>
+            <div className="flex flex-wrap gap-2">
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((r) => (
+                <Button
+                  key={r}
+                  type="button"
+                  size="sm"
+                  variant={rpe === r ? "default" : "outline"}
+                  onClick={() => setRpe(r)}
+                  className="min-w-[2.5rem]"
+                >
+                  {r}
+                </Button>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-2">

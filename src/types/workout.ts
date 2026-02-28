@@ -1,4 +1,4 @@
-export type WorkoutStyle = "strength" | "hiit" | "circuit" | "emom" | "amrap" | "tabata" | "custom";
+export type WorkoutStyle = "strength" | "hiit" | "circuit" | "emom" | "amrap" | "tabata" | "crossfit" | "hyrox" | "custom";
 
 export type BodyGroup =
   | "chest"

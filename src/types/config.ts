@@ -3,6 +3,8 @@ export interface Entitlement {
   user_id: string;
   plan: "free" | "paid";
   free_generations_used: number;
+  daily_generations_used: number;
+  last_generation_date: string;
   created_at: string;
   updated_at: string;
 }

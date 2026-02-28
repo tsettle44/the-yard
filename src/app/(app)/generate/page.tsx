@@ -1,24 +1,44 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useProfiles } from "@/hooks/use-profile";
 import { useGym } from "@/hooks/use-gym";
 import { useWorkoutStream } from "@/hooks/use-workout-stream";
 import { useWorkouts } from "@/hooks/use-workouts";
+import { useEntitlement } from "@/hooks/use-entitlement";
+import { config } from "@/lib/config";
 import { WorkoutForm } from "@/components/workout/workout-form";
 import { WorkoutView } from "@/components/workout/workout-view";
+import { UpgradeCard } from "@/components/payment/upgrade-card";
 import { Workout, GenerateWorkoutRequest } from "@/types/workout";
 import { toast } from "sonner";
 
 export default function GeneratePage() {
+  const searchParams = useSearchParams();
   const { activeProfile, guestMode, hydrated: profilesHydrated } = useProfiles();
   const { activeGym, hydrated: gymsHydrated } = useGym();
   const { workout, rawJson, isStreaming, error, generate, reset } = useWorkoutStream();
   const { addWorkout } = useWorkouts();
+  const entitlement = useEntitlement();
   const lastRequestRef = useRef<GenerateWorkoutRequest | null>(null);
   const [view, setView] = useState<"form" | "workout">("form");
+  const [paymentHandled, setPaymentHandled] = useState(false);
 
   const hydrated = profilesHydrated && gymsHydrated;
+
+  // Handle ?payment=success query param
+  useEffect(() => {
+    if (paymentHandled) return;
+    const payment = searchParams.get("payment");
+    if (payment === "success") {
+      toast.success("Payment successful! You now have full access.");
+      entitlement.refresh();
+      setPaymentHandled(true);
+      // Clean up URL
+      window.history.replaceState({}, "", "/generate");
+    }
+  }, [searchParams, paymentHandled, entitlement]);
 
   if (!hydrated) {
     return <div className="animate-pulse space-y-4"><div className="h-64 bg-muted rounded-lg" /></div>;
@@ -38,6 +58,7 @@ export default function GeneratePage() {
 
   function handleBack() {
     reset();
+    entitlement.refresh();
     setView("form");
   }
 
@@ -82,15 +103,35 @@ export default function GeneratePage() {
     );
   }
 
+  const isHosted = config.isHosted;
+  const showLimitReached = isHosted && !entitlement.loading && !entitlement.canGenerate;
+
   return (
-    <div className="max-w-lg mx-auto">
-      <WorkoutForm
-        profileId={activeProfile?.id || null}
-        gymId={activeGym?.id || null}
-        guestMode={guestMode}
-        onGenerate={handleGenerate}
-        isStreaming={isStreaming}
-      />
+    <div className="max-w-lg mx-auto space-y-4">
+      {isHosted && !entitlement.loading && entitlement.plan && (
+        <div className="text-sm text-muted-foreground text-center">
+          {entitlement.remaining} generation{entitlement.remaining !== 1 ? "s" : ""} remaining
+          {entitlement.plan === "free" ? "" : " today"}
+        </div>
+      )}
+
+      {showLimitReached ? (
+        entitlement.plan === "free" ? (
+          <UpgradeCard />
+        ) : (
+          <div className="text-center text-sm text-muted-foreground py-8">
+            Daily limit reached. Come back tomorrow!
+          </div>
+        )
+      ) : (
+        <WorkoutForm
+          profileId={activeProfile?.id || null}
+          gymId={activeGym?.id || null}
+          guestMode={guestMode}
+          onGenerate={handleGenerate}
+          isStreaming={isStreaming}
+        />
+      )}
     </div>
   );
 }

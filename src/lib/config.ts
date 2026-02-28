@@ -40,4 +40,5 @@ export const config = {
   },
 
   freeGenerations: 3,
+  dailyGenerationLimit: 3,
 } as const;

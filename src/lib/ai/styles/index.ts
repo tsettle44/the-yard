@@ -52,6 +52,20 @@ export const workoutStyles: StyleDefinition[] = [
     defaultRpe: 9,
   },
   {
+    slug: "crossfit",
+    name: "CrossFit",
+    description: "CrossFit-style WOD with mixed modalities and functional movements",
+    defaultDuration: 30,
+    defaultRpe: 9,
+  },
+  {
+    slug: "hyrox",
+    name: "Hyrox",
+    description: "Hyrox-style training alternating running with functional stations",
+    defaultDuration: 45,
+    defaultRpe: 8,
+  },
+  {
     slug: "custom",
     name: "Custom",
     description: "Describe your own workout style in the notes",

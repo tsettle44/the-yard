@@ -3,6 +3,8 @@ import { getAIClient, DEFAULT_MODEL } from "@/lib/ai/client";
 import { buildSystemPrompt, buildUserPrompt } from "@/lib/ai/prompts";
 import { generateWorkoutSchema, workoutOutputSchema } from "@/lib/ai/schemas";
 import { config } from "@/lib/config";
+import { requireAuth } from "@/lib/api/auth";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Profile } from "@/types/profile";
 import { Equipment, SharedResourceGroup } from "@/types/gym";
 
@@ -10,6 +12,40 @@ export const maxDuration = 60;
 
 export async function POST(request: Request) {
   try {
+    // Hosted mode: enforce auth + generation limits
+    if (config.isHosted) {
+      const auth = await requireAuth();
+      if ("error" in auth) return auth.error;
+
+      const supabase = createAdminClient();
+      const { data: result, error: rpcError } = await supabase.rpc(
+        "check_and_increment_generation",
+        { p_user_id: auth.user.id }
+      );
+
+      if (rpcError) {
+        console.error("Entitlement check error:", rpcError);
+        return Response.json(
+          { error: "Failed to check generation limit" },
+          { status: 500 }
+        );
+      }
+
+      if (!result.allowed) {
+        return Response.json(
+          {
+            error: result.plan === "free"
+              ? "You've used all 3 free generations. Upgrade to keep generating workouts."
+              : "Daily generation limit reached. Come back tomorrow!",
+            plan: result.plan,
+            used: result.used,
+            limit: result.limit,
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     const body = await request.json();
     const parsed = generateWorkoutSchema.safeParse(body);
 
