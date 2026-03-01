@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { Suspense, useRef, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useProfiles } from "@/hooks/use-profile";
 import { useGym } from "@/hooks/use-gym";
@@ -15,6 +15,14 @@ import { Workout, GenerateWorkoutRequest } from "@/types/workout";
 import { toast } from "sonner";
 
 export default function GeneratePage() {
+  return (
+    <Suspense fallback={<div className="animate-pulse space-y-4"><div className="h-64 bg-muted rounded-lg" /></div>}>
+      <GeneratePageContent />
+    </Suspense>
+  );
+}
+
+function GeneratePageContent() {
   const searchParams = useSearchParams();
   const { activeProfile, guestMode, hydrated: profilesHydrated } = useProfiles();
   const { activeGym, hydrated: gymsHydrated } = useGym();
