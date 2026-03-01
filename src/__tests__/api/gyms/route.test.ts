@@ -23,25 +23,25 @@ describe("GET /api/gyms", () => {
     mockRequireAuth.mockResolvedValue({
       error: Response.json({ error: "Unauthorized" }, { status: 401 }),
     });
-    const res = await GET();
+    const res = (await GET())!;
     expect(res.status).toBe(401);
   });
 
   it("returns empty array when no gyms", async () => {
-    const chain: Record<string, any> = {};
+    const chain: Record<string, unknown> = {};
     chain.select = vi.fn().mockReturnValue(chain);
     chain.eq = vi.fn().mockReturnValue(chain);
     chain.order = vi.fn().mockResolvedValue({ data: [], error: null });
     mockFrom.mockReturnValue(chain);
 
-    const res = await GET();
+    const res = (await GET())!;
     const body = await res.json();
     expect(body).toEqual([]);
   });
 
   it("nests equipment and shared resources", async () => {
     // First call: gyms
-    const gymsChain: Record<string, any> = {};
+    const gymsChain: Record<string, unknown> = {};
     gymsChain.select = vi.fn().mockReturnValue(gymsChain);
     gymsChain.eq = vi.fn().mockReturnValue(gymsChain);
     gymsChain.order = vi.fn().mockResolvedValue({
@@ -50,7 +50,7 @@ describe("GET /api/gyms", () => {
     });
 
     // Equipment chain
-    const eqChain: Record<string, any> = {};
+    const eqChain: Record<string, unknown> = {};
     eqChain.select = vi.fn().mockReturnValue(eqChain);
     eqChain.in = vi.fn().mockResolvedValue({
       data: [{ id: "eq-1", gym_id: "gym-1", slug: "barbell", name: "Barbell" }],
@@ -58,30 +58,28 @@ describe("GET /api/gyms", () => {
     });
 
     // Shared resources chain
-    const srChain: Record<string, any> = {};
+    const srChain: Record<string, unknown> = {};
     srChain.select = vi.fn().mockReturnValue(srChain);
     srChain.in = vi.fn().mockResolvedValue({
       data: [{ id: "sr-1", gym_id: "gym-1", resource_name: "Station", equipment_ids: ["eq-1"], constraint_type: "no_superset", notes: "" }],
       error: null,
     });
 
-    let fromCalls = 0;
     mockFrom.mockImplementation((table: string) => {
-      fromCalls++;
       if (table === "gyms") return gymsChain;
       if (table === "equipment") return eqChain;
       if (table === "shared_resource_groups") return srChain;
       return gymsChain;
     });
 
-    const res = await GET();
+    const res = (await GET())!;
     const body = await res.json();
     expect(body[0].equipment).toBeDefined();
     expect(body[0].shared_resources).toBeDefined();
   });
 
   it("maps constraint_type to constraint", async () => {
-    const gymsChain: Record<string, any> = {};
+    const gymsChain: Record<string, unknown> = {};
     gymsChain.select = vi.fn().mockReturnValue(gymsChain);
     gymsChain.eq = vi.fn().mockReturnValue(gymsChain);
     gymsChain.order = vi.fn().mockResolvedValue({
@@ -89,11 +87,11 @@ describe("GET /api/gyms", () => {
       error: null,
     });
 
-    const eqChain: Record<string, any> = {};
+    const eqChain: Record<string, unknown> = {};
     eqChain.select = vi.fn().mockReturnValue(eqChain);
     eqChain.in = vi.fn().mockResolvedValue({ data: [], error: null });
 
-    const srChain: Record<string, any> = {};
+    const srChain: Record<string, unknown> = {};
     srChain.select = vi.fn().mockReturnValue(srChain);
     srChain.in = vi.fn().mockResolvedValue({
       data: [{ id: "sr-1", gym_id: "gym-1", resource_name: "X", equipment_ids: [], constraint_type: "group_together", notes: "" }],
@@ -106,19 +104,19 @@ describe("GET /api/gyms", () => {
       return srChain;
     });
 
-    const res = await GET();
+    const res = (await GET())!;
     const body = await res.json();
     expect(body[0].shared_resources[0].constraint).toBe("group_together");
   });
 
   it("returns 500 on DB error", async () => {
-    const chain: Record<string, any> = {};
+    const chain: Record<string, unknown> = {};
     chain.select = vi.fn().mockReturnValue(chain);
     chain.eq = vi.fn().mockReturnValue(chain);
     chain.order = vi.fn().mockResolvedValue({ data: null, error: { message: "DB error" } });
     mockFrom.mockReturnValue(chain);
 
-    const res = await GET();
+    const res = (await GET())!;
     expect(res.status).toBe(500);
   });
 });
@@ -140,12 +138,12 @@ describe("POST /api/gyms", () => {
       method: "POST",
       body: JSON.stringify({ name: "Test" }),
     });
-    const res = await POST(req);
+    const res = (await POST(req))!;
     expect(res.status).toBe(401);
   });
 
   it("creates gym with name and default layout_notes", async () => {
-    const chain: Record<string, any> = {};
+    const chain: Record<string, unknown> = {};
     chain.insert = vi.fn().mockReturnValue(chain);
     chain.select = vi.fn().mockReturnValue(chain);
     chain.single = vi.fn().mockResolvedValue({
@@ -165,7 +163,7 @@ describe("POST /api/gyms", () => {
   });
 
   it("returns 201 with empty nested arrays", async () => {
-    const chain: Record<string, any> = {};
+    const chain: Record<string, unknown> = {};
     chain.insert = vi.fn().mockReturnValue(chain);
     chain.select = vi.fn().mockReturnValue(chain);
     chain.single = vi.fn().mockResolvedValue({
@@ -178,7 +176,7 @@ describe("POST /api/gyms", () => {
       method: "POST",
       body: JSON.stringify({ name: "Gym" }),
     });
-    const res = await POST(req);
+    const res = (await POST(req))!;
     expect(res.status).toBe(201);
     const body = await res.json();
     expect(body.equipment).toEqual([]);
@@ -186,7 +184,7 @@ describe("POST /api/gyms", () => {
   });
 
   it("returns 500 on DB error", async () => {
-    const chain: Record<string, any> = {};
+    const chain: Record<string, unknown> = {};
     chain.insert = vi.fn().mockReturnValue(chain);
     chain.select = vi.fn().mockReturnValue(chain);
     chain.single = vi.fn().mockResolvedValue({ data: null, error: { message: "fail" } });
@@ -196,7 +194,7 @@ describe("POST /api/gyms", () => {
       method: "POST",
       body: JSON.stringify({ name: "Gym" }),
     });
-    const res = await POST(req);
+    const res = (await POST(req))!;
     expect(res.status).toBe(500);
   });
 });

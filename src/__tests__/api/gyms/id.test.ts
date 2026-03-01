@@ -13,6 +13,7 @@ import { PATCH, DELETE } from "@/app/api/gyms/[id]/route";
 const params = Promise.resolve({ id: "gym-1" });
 
 function makeChain(data: unknown, error: unknown = null) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chain: Record<string, any> = {};
   chain.update = vi.fn().mockReturnValue(chain);
   chain.delete = vi.fn().mockReturnValue(chain);
@@ -40,7 +41,7 @@ describe("PATCH /api/gyms/:id", () => {
       method: "PATCH",
       body: JSON.stringify({ name: "Updated" }),
     });
-    const res = await PATCH(req, { params });
+    const res = (await PATCH(req, { params }))!;
     expect(res.status).toBe(401);
   });
 
@@ -70,7 +71,7 @@ describe("PATCH /api/gyms/:id", () => {
       method: "PATCH",
       body: JSON.stringify({ name: "X" }),
     });
-    const res = await PATCH(req, { params });
+    const res = (await PATCH(req, { params }))!;
     expect(res.status).toBe(500);
   });
 });
@@ -89,11 +90,12 @@ describe("DELETE /api/gyms/:id", () => {
       error: Response.json({ error: "Unauthorized" }, { status: 401 }),
     });
     const req = new Request("http://localhost", { method: "DELETE" });
-    const res = await DELETE(req, { params });
+    const res = (await DELETE(req, { params }))!;
     expect(res.status).toBe(401);
   });
 
   it("returns 204 on success", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const chain: Record<string, any> = {};
     chain.delete = vi.fn().mockReturnValue(chain);
     chain.eq = vi.fn().mockReturnValue(chain);
@@ -106,11 +108,12 @@ describe("DELETE /api/gyms/:id", () => {
     mockFrom.mockReturnValue(chain);
 
     const req = new Request("http://localhost", { method: "DELETE" });
-    const res = await DELETE(req, { params });
+    const res = (await DELETE(req, { params }))!;
     expect(res.status).toBe(204);
   });
 
   it("returns 500 on DB error", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const chain: Record<string, any> = {};
     chain.delete = vi.fn().mockReturnValue(chain);
     chain.eq = vi.fn().mockReturnValue(chain);
@@ -123,7 +126,7 @@ describe("DELETE /api/gyms/:id", () => {
     mockFrom.mockReturnValue(chain);
 
     const req = new Request("http://localhost", { method: "DELETE" });
-    const res = await DELETE(req, { params });
+    const res = (await DELETE(req, { params }))!;
     expect(res.status).toBe(500);
   });
 });

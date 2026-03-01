@@ -26,7 +26,6 @@ describe("useProfiles — Self-hosted", () => {
     const { result } = renderHook(() => useProfiles());
     act(() => {
       result.current.addProfile({
-        user_id: null,
         name: "Test",
         fitness_level: "beginner",
         preferred_styles: [],
@@ -44,7 +43,6 @@ describe("useProfiles — Self-hosted", () => {
     let profileId: string;
     act(() => {
       const p = result.current.addProfile({
-        user_id: null,
         name: "Original",
         fitness_level: "beginner",
         preferred_styles: [],
@@ -65,7 +63,6 @@ describe("useProfiles — Self-hosted", () => {
     let profileId: string;
     act(() => {
       const p = result.current.addProfile({
-        user_id: null,
         name: "Delete Me",
         fitness_level: "beginner",
         preferred_styles: [],
@@ -86,7 +83,6 @@ describe("useProfiles — Self-hosted", () => {
     let profileId: string;
     act(() => {
       const p = result.current.addProfile({
-        user_id: null,
         name: "Active",
         fitness_level: "intermediate",
         preferred_styles: [],
@@ -106,7 +102,6 @@ describe("useProfiles — Self-hosted", () => {
     const { result } = renderHook(() => useProfiles());
     act(() => {
       result.current.addProfile({
-        user_id: null,
         name: "Default",
         fitness_level: "beginner",
         preferred_styles: [],
@@ -122,7 +117,6 @@ describe("useProfiles — Self-hosted", () => {
     const { result } = renderHook(() => useProfiles());
     act(() => {
       result.current.addProfile({
-        user_id: null,
         name: "First",
         fitness_level: "beginner",
         preferred_styles: [],
@@ -143,7 +137,6 @@ describe("useProfiles — Self-hosted", () => {
     const { result } = renderHook(() => useProfiles());
     act(() => {
       result.current.addProfile({
-        user_id: null,
         name: "Test",
         fitness_level: "beginner",
         preferred_styles: [],
@@ -163,7 +156,6 @@ describe("useProfiles — Self-hosted", () => {
     const { result } = renderHook(() => useProfiles());
     act(() => {
       result.current.addProfile({
-        user_id: null,
         name: "First Default",
         fitness_level: "beginner",
         preferred_styles: [],
@@ -174,7 +166,6 @@ describe("useProfiles — Self-hosted", () => {
     });
     act(() => {
       result.current.addProfile({
-        user_id: null,
         name: "Second Default",
         fitness_level: "beginner",
         preferred_styles: [],
@@ -193,7 +184,6 @@ describe("useProfiles — Self-hosted", () => {
     let profileId: string;
     act(() => {
       const p = result.current.addProfile({
-        user_id: null,
         name: "Active",
         fitness_level: "beginner",
         preferred_styles: [],

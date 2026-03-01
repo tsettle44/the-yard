@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 
 // We need to test tryParsePartialJson. Since it's not exported,
 // we'll test it indirectly through the hook or extract and test the logic.

@@ -50,7 +50,7 @@ describe("GET /api/entitlement", () => {
 
   it("returns 400 in self-hosted mode", async () => {
     mockIsHosted = false;
-    const res = await GET();
+    const res = (await GET())!;
     expect(res.status).toBe(400);
   });
 
@@ -58,7 +58,7 @@ describe("GET /api/entitlement", () => {
     mockRequireAuth.mockResolvedValue({
       error: Response.json({ error: "Unauthorized" }, { status: 401 }),
     });
-    const res = await GET();
+    const res = (await GET())!;
     expect(res.status).toBe(401);
   });
 
@@ -69,7 +69,7 @@ describe("GET /api/entitlement", () => {
       daily_generations_used: 0,
       last_generation_date: "2025-01-01",
     });
-    const res = await GET();
+    const res = (await GET())!;
     const body = await res.json();
     expect(body.plan).toBe("free");
     expect(body.canGenerate).toBe(true);
@@ -83,7 +83,7 @@ describe("GET /api/entitlement", () => {
       daily_generations_used: 0,
       last_generation_date: "2025-01-01",
     });
-    const res = await GET();
+    const res = (await GET())!;
     const body = await res.json();
     expect(body.plan).toBe("free");
     expect(body.used).toBe(2);
@@ -99,7 +99,7 @@ describe("GET /api/entitlement", () => {
       daily_generations_used: 1,
       last_generation_date: new Date().toISOString().split("T")[0],
     });
-    const res = await GET();
+    const res = (await GET())!;
     const body = await res.json();
     expect(body.plan).toBe("paid");
     expect(body.limit).toBe(3);
@@ -158,7 +158,7 @@ describe("GET /api/entitlement", () => {
       };
     });
 
-    const res = await GET();
+    const res = (await GET())!;
     const body = await res.json();
     expect(body.used).toBe(0); // Reset because it's a new day
     expect(body.canGenerate).toBe(true);
@@ -187,7 +187,7 @@ describe("GET /api/entitlement", () => {
       };
     });
 
-    const res = await GET();
+    const res = (await GET())!;
     expect(res.status).toBe(500);
   });
 });

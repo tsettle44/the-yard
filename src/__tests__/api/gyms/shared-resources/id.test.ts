@@ -26,11 +26,12 @@ describe("DELETE /api/gyms/:id/shared-resources/:resourceId", () => {
       error: Response.json({ error: "Unauthorized" }, { status: 401 }),
     });
     const req = new Request("http://localhost", { method: "DELETE" });
-    const res = await DELETE(req, { params });
+    const res = (await DELETE(req, { params }))!;
     expect(res.status).toBe(401);
   });
 
   it("returns 404 when gym not owned", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const chain: Record<string, any> = {};
     chain.select = vi.fn().mockReturnValue(chain);
     chain.eq = vi.fn().mockReturnValue(chain);
@@ -38,16 +39,18 @@ describe("DELETE /api/gyms/:id/shared-resources/:resourceId", () => {
     mockFrom.mockReturnValue(chain);
 
     const req = new Request("http://localhost", { method: "DELETE" });
-    const res = await DELETE(req, { params });
+    const res = (await DELETE(req, { params }))!;
     expect(res.status).toBe(404);
   });
 
   it("deletes the shared resource", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const gymChain: Record<string, any> = {};
     gymChain.select = vi.fn().mockReturnValue(gymChain);
     gymChain.eq = vi.fn().mockReturnValue(gymChain);
     gymChain.single = vi.fn().mockResolvedValue({ data: { id: "gym-1" }, error: null });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const srChain: Record<string, any> = {};
     srChain.delete = vi.fn().mockReturnValue(srChain);
     srChain.eq = vi.fn().mockReturnValue(srChain);
@@ -64,16 +67,18 @@ describe("DELETE /api/gyms/:id/shared-resources/:resourceId", () => {
     });
 
     const req = new Request("http://localhost", { method: "DELETE" });
-    const res = await DELETE(req, { params });
+    const res = (await DELETE(req, { params }))!;
     expect(res.status).toBe(204);
   });
 
   it("returns 500 on DB error", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const gymChain: Record<string, any> = {};
     gymChain.select = vi.fn().mockReturnValue(gymChain);
     gymChain.eq = vi.fn().mockReturnValue(gymChain);
     gymChain.single = vi.fn().mockResolvedValue({ data: { id: "gym-1" }, error: null });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const srChain: Record<string, any> = {};
     srChain.delete = vi.fn().mockReturnValue(srChain);
     srChain.eq = vi.fn().mockReturnValue(srChain);
@@ -90,7 +95,7 @@ describe("DELETE /api/gyms/:id/shared-resources/:resourceId", () => {
     });
 
     const req = new Request("http://localhost", { method: "DELETE" });
-    const res = await DELETE(req, { params });
+    const res = (await DELETE(req, { params }))!;
     expect(res.status).toBe(500);
   });
 });

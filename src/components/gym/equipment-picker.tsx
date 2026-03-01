@@ -16,7 +16,6 @@ interface EquipmentPickerProps {
 }
 
 export function EquipmentPicker({
-  gymId,
   currentEquipment,
   onAdd,
   onRemove,

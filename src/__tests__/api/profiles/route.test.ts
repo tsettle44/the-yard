@@ -11,7 +11,7 @@ vi.mock("@/lib/api/auth", () => ({
 import { GET, POST } from "@/app/api/profiles/route";
 
 function makeChain(data: unknown, error: unknown = null) {
-  const chain: Record<string, any> = {};
+  const chain: Record<string, unknown> = {};
   chain.select = vi.fn().mockReturnValue(chain);
   chain.insert = vi.fn().mockReturnValue(chain);
   chain.update = vi.fn().mockReturnValue(chain);
@@ -35,7 +35,7 @@ describe("GET /api/profiles", () => {
     mockRequireAuth.mockResolvedValue({
       error: Response.json({ error: "Unauthorized" }, { status: 401 }),
     });
-    const res = await GET();
+    const res = (await GET())!;
     expect(res.status).toBe(401);
   });
 
@@ -47,14 +47,14 @@ describe("GET /api/profiles", () => {
 
   it("returns empty array when no profiles", async () => {
     makeChain([]);
-    const res = await GET();
+    const res = (await GET())!;
     const body = await res.json();
     expect(body).toEqual([]);
   });
 
   it("returns 500 on DB error", async () => {
     makeChain(null, { message: "DB error" });
-    const res = await GET();
+    const res = (await GET())!;
     expect(res.status).toBe(500);
   });
 });
@@ -76,7 +76,7 @@ describe("POST /api/profiles", () => {
       method: "POST",
       body: JSON.stringify({ name: "Test" }),
     });
-    const res = await POST(req);
+    const res = (await POST(req))!;
     expect(res.status).toBe(401);
   });
 
@@ -98,7 +98,7 @@ describe("POST /api/profiles", () => {
       method: "POST",
       body: JSON.stringify({ name: "Test", fitness_level: "beginner" }),
     });
-    const res = await POST(req);
+    const res = (await POST(req))!;
     expect(res.status).toBe(201);
   });
 
@@ -135,7 +135,7 @@ describe("POST /api/profiles", () => {
       method: "POST",
       body: JSON.stringify({ name: "Test" }),
     });
-    const res = await POST(req);
+    const res = (await POST(req))!;
     expect(res.status).toBe(500);
   });
 });

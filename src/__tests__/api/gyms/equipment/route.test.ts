@@ -29,12 +29,12 @@ describe("POST /api/gyms/:id/equipment", () => {
       method: "POST",
       body: JSON.stringify({ slug: "barbell", name: "Barbell", category: "strength" }),
     });
-    const res = await POST(req, { params });
+    const res = (await POST(req, { params }))!;
     expect(res.status).toBe(401);
   });
 
   it("returns 404 when gym not owned", async () => {
-    const gymChain: Record<string, any> = {};
+    const gymChain: Record<string, unknown> = {};
     gymChain.select = vi.fn().mockReturnValue(gymChain);
     gymChain.eq = vi.fn().mockReturnValue(gymChain);
     gymChain.single = vi.fn().mockResolvedValue({ data: null, error: null });
@@ -44,19 +44,19 @@ describe("POST /api/gyms/:id/equipment", () => {
       method: "POST",
       body: JSON.stringify({ slug: "barbell", name: "Barbell", category: "strength" }),
     });
-    const res = await POST(req, { params });
+    const res = (await POST(req, { params }))!;
     expect(res.status).toBe(404);
   });
 
   it("creates equipment with fields", async () => {
     // Gym ownership check
-    const gymChain: Record<string, any> = {};
+    const gymChain: Record<string, unknown> = {};
     gymChain.select = vi.fn().mockReturnValue(gymChain);
     gymChain.eq = vi.fn().mockReturnValue(gymChain);
     gymChain.single = vi.fn().mockResolvedValue({ data: { id: "gym-1" }, error: null });
 
     // Equipment insert
-    const eqChain: Record<string, any> = {};
+    const eqChain: Record<string, unknown> = {};
     eqChain.insert = vi.fn().mockReturnValue(eqChain);
     eqChain.select = vi.fn().mockReturnValue(eqChain);
     eqChain.single = vi.fn().mockResolvedValue({
@@ -73,7 +73,7 @@ describe("POST /api/gyms/:id/equipment", () => {
       method: "POST",
       body: JSON.stringify({ slug: "barbell", name: "Barbell", category: "strength" }),
     });
-    const res = await POST(req, { params });
+    const res = (await POST(req, { params }))!;
     expect(res.status).toBe(201);
     expect(eqChain.insert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -88,12 +88,12 @@ describe("POST /api/gyms/:id/equipment", () => {
   });
 
   it("defaults quantity to 1 and attributes to {}", async () => {
-    const gymChain: Record<string, any> = {};
+    const gymChain: Record<string, unknown> = {};
     gymChain.select = vi.fn().mockReturnValue(gymChain);
     gymChain.eq = vi.fn().mockReturnValue(gymChain);
     gymChain.single = vi.fn().mockResolvedValue({ data: { id: "gym-1" }, error: null });
 
-    const eqChain: Record<string, any> = {};
+    const eqChain: Record<string, unknown> = {};
     eqChain.insert = vi.fn().mockReturnValue(eqChain);
     eqChain.select = vi.fn().mockReturnValue(eqChain);
     eqChain.single = vi.fn().mockResolvedValue({ data: { id: "eq-1" }, error: null });
@@ -114,12 +114,12 @@ describe("POST /api/gyms/:id/equipment", () => {
   });
 
   it("returns 500 on DB error", async () => {
-    const gymChain: Record<string, any> = {};
+    const gymChain: Record<string, unknown> = {};
     gymChain.select = vi.fn().mockReturnValue(gymChain);
     gymChain.eq = vi.fn().mockReturnValue(gymChain);
     gymChain.single = vi.fn().mockResolvedValue({ data: { id: "gym-1" }, error: null });
 
-    const eqChain: Record<string, any> = {};
+    const eqChain: Record<string, unknown> = {};
     eqChain.insert = vi.fn().mockReturnValue(eqChain);
     eqChain.select = vi.fn().mockReturnValue(eqChain);
     eqChain.single = vi.fn().mockResolvedValue({ data: null, error: { message: "fail" } });
@@ -133,7 +133,7 @@ describe("POST /api/gyms/:id/equipment", () => {
       method: "POST",
       body: JSON.stringify({ slug: "barbell", name: "Barbell", category: "strength" }),
     });
-    const res = await POST(req, { params });
+    const res = (await POST(req, { params }))!;
     expect(res.status).toBe(500);
   });
 });

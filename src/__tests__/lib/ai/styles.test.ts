@@ -28,6 +28,6 @@ describe("workoutStyles", () => {
   });
 
   it("getStyleBySlug returns undefined for unknown", () => {
-    expect(getStyleBySlug("yoga" as any)).toBeUndefined();
+    expect(getStyleBySlug("yoga" as never)).toBeUndefined();
   });
 });

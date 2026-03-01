@@ -29,12 +29,12 @@ describe("PATCH /api/workouts/:id", () => {
       method: "PATCH",
       body: JSON.stringify({ rating: 5 }),
     });
-    const res = await PATCH(req, { params });
+    const res = (await PATCH(req, { params }))!;
     expect(res.status).toBe(401);
   });
 
   it("updates rating", async () => {
-    const chain: Record<string, any> = {};
+    const chain: Record<string, unknown> = {};
     chain.update = vi.fn().mockReturnValue(chain);
     chain.eq = vi.fn().mockReturnValue(chain);
     chain.select = vi.fn().mockReturnValue(chain);
@@ -50,7 +50,7 @@ describe("PATCH /api/workouts/:id", () => {
   });
 
   it("updates notes", async () => {
-    const chain: Record<string, any> = {};
+    const chain: Record<string, unknown> = {};
     chain.update = vi.fn().mockReturnValue(chain);
     chain.eq = vi.fn().mockReturnValue(chain);
     chain.select = vi.fn().mockReturnValue(chain);
@@ -66,7 +66,7 @@ describe("PATCH /api/workouts/:id", () => {
   });
 
   it("only allows rating and notes fields", async () => {
-    const chain: Record<string, any> = {};
+    const chain: Record<string, unknown> = {};
     chain.update = vi.fn().mockReturnValue(chain);
     chain.eq = vi.fn().mockReturnValue(chain);
     chain.select = vi.fn().mockReturnValue(chain);
@@ -83,7 +83,7 @@ describe("PATCH /api/workouts/:id", () => {
   });
 
   it("returns 500 on DB error", async () => {
-    const chain: Record<string, any> = {};
+    const chain: Record<string, unknown> = {};
     chain.update = vi.fn().mockReturnValue(chain);
     chain.eq = vi.fn().mockReturnValue(chain);
     chain.select = vi.fn().mockReturnValue(chain);
@@ -94,7 +94,7 @@ describe("PATCH /api/workouts/:id", () => {
       method: "PATCH",
       body: JSON.stringify({ rating: 5 }),
     });
-    const res = await PATCH(req, { params });
+    const res = (await PATCH(req, { params }))!;
     expect(res.status).toBe(500);
   });
 });
@@ -113,12 +113,12 @@ describe("DELETE /api/workouts/:id", () => {
       error: Response.json({ error: "Unauthorized" }, { status: 401 }),
     });
     const req = new Request("http://localhost", { method: "DELETE" });
-    const res = await DELETE(req, { params });
+    const res = (await DELETE(req, { params }))!;
     expect(res.status).toBe(401);
   });
 
   it("deletes by id", async () => {
-    const chain: Record<string, any> = {};
+    const chain: Record<string, unknown> = {};
     chain.delete = vi.fn().mockReturnValue(chain);
     chain.eq = vi.fn().mockResolvedValue({ error: null });
     mockFrom.mockReturnValue(chain);
@@ -129,24 +129,24 @@ describe("DELETE /api/workouts/:id", () => {
   });
 
   it("returns 204 on success", async () => {
-    const chain: Record<string, any> = {};
+    const chain: Record<string, unknown> = {};
     chain.delete = vi.fn().mockReturnValue(chain);
     chain.eq = vi.fn().mockResolvedValue({ error: null });
     mockFrom.mockReturnValue(chain);
 
     const req = new Request("http://localhost", { method: "DELETE" });
-    const res = await DELETE(req, { params });
+    const res = (await DELETE(req, { params }))!;
     expect(res.status).toBe(204);
   });
 
   it("returns 500 on DB error", async () => {
-    const chain: Record<string, any> = {};
+    const chain: Record<string, unknown> = {};
     chain.delete = vi.fn().mockReturnValue(chain);
     chain.eq = vi.fn().mockResolvedValue({ error: { message: "fail" } });
     mockFrom.mockReturnValue(chain);
 
     const req = new Request("http://localhost", { method: "DELETE" });
-    const res = await DELETE(req, { params });
+    const res = (await DELETE(req, { params }))!;
     expect(res.status).toBe(500);
   });
 });

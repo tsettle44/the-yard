@@ -31,7 +31,7 @@ export function UpgradeCard() {
         <CardTitle>Unlock The Yard</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 text-sm text-muted-foreground">
-        <p>You've used all your free generations.</p>
+        <p>You&apos;ve used all your free generations.</p>
         <ul className="list-disc list-inside space-y-1">
           <li>3 workouts per day</li>
           <li>One-time purchase — $9.99</li>

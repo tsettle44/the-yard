@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { profile_id, gym_id, style, duration_min, target_rpe, body_groups, parameters } =
+    const { profile_id, style, duration_min, target_rpe, body_groups, parameters } =
       parsed.data;
 
     const apiKey = config.anthropic.apiKey;

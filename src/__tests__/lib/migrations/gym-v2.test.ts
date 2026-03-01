@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { needsMigration, migrateGyms, markMigrated } from "@/lib/migrations/gym-v2";
 import { makeGym, makeEquipment, makeConflict } from "../../fixtures";
 

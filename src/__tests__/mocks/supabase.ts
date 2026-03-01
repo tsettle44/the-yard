@@ -64,8 +64,7 @@ export function createMockSupabase(defaults?: { data?: unknown; error?: unknown 
   // Make the chain thenable so `await supabase.from(...).select(...)` works
   const thenableResult = () => Promise.resolve(result);
   for (const method of chainMethods) {
-    const original = chain[method].getMockImplementation() || (() => chain);
-    chain[method].mockImplementation((...args: unknown[]) => {
+    chain[method].mockImplementation(() => {
       const ret = { ...chain, then: (resolve: (v: unknown) => void) => thenableResult().then(resolve) };
       return ret;
     });

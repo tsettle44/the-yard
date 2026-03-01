@@ -22,23 +22,22 @@ export default function GeneratePage() {
   const { addWorkout } = useWorkouts();
   const entitlement = useEntitlement();
   const lastRequestRef = useRef<GenerateWorkoutRequest | null>(null);
+  const paymentHandledRef = useRef(false);
   const [view, setView] = useState<"form" | "workout">("form");
-  const [paymentHandled, setPaymentHandled] = useState(false);
 
   const hydrated = profilesHydrated && gymsHydrated;
 
   // Handle ?payment=success query param
   useEffect(() => {
-    if (paymentHandled) return;
+    if (paymentHandledRef.current) return;
     const payment = searchParams.get("payment");
     if (payment === "success") {
+      paymentHandledRef.current = true;
       toast.success("Payment successful! You now have full access.");
       entitlement.refresh();
-      setPaymentHandled(true);
-      // Clean up URL
       window.history.replaceState({}, "", "/generate");
     }
-  }, [searchParams, paymentHandled, entitlement]);
+  }, [searchParams, entitlement]);
 
   if (!hydrated) {
     return <div className="animate-pulse space-y-4"><div className="h-64 bg-muted rounded-lg" /></div>;

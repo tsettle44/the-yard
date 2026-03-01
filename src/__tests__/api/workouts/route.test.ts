@@ -23,26 +23,28 @@ describe("GET /api/workouts", () => {
     mockRequireAuth.mockResolvedValue({
       error: Response.json({ error: "Unauthorized" }, { status: 401 }),
     });
-    const res = await GET();
+    const res = (await GET())!;
     expect(res.status).toBe(401);
   });
 
   it("returns empty array when no profiles or gyms", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const chain: Record<string, any> = {};
     chain.select = vi.fn().mockReturnValue(chain);
     chain.eq = vi.fn().mockResolvedValue({ data: [], error: null });
     mockFrom.mockReturnValue(chain);
 
-    const res = await GET();
+    const res = (await GET())!;
     const body = await res.json();
     expect(body).toEqual([]);
   });
 
   it("queries workouts for user profiles", async () => {
-    let fromCalls: string[] = [];
+    const fromCalls: string[] = [];
 
     mockFrom.mockImplementation((table: string) => {
       fromCalls.push(table);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const chain: Record<string, any> = {};
       chain.select = vi.fn().mockReturnValue(chain);
       chain.eq = vi.fn().mockReturnValue(chain);
@@ -59,8 +61,8 @@ describe("GET /api/workouts", () => {
       return chain;
     });
 
-    const res = await GET();
-    const body = await res.json();
+    const res = (await GET())!;
+    await res.json();
     expect(fromCalls).toContain("profiles");
     expect(fromCalls).toContain("gyms");
     expect(fromCalls).toContain("workouts");
@@ -69,12 +71,13 @@ describe("GET /api/workouts", () => {
   it("orders by created_at descending", async () => {
     let orderCalled = false;
     mockFrom.mockImplementation((table: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const chain: Record<string, any> = {};
       chain.select = vi.fn().mockReturnValue(chain);
       chain.eq = vi.fn().mockReturnValue(chain);
       chain.in = vi.fn().mockReturnValue(chain);
       chain.or = vi.fn().mockReturnValue(chain);
-      chain.order = vi.fn().mockImplementation((col: string, opts: any) => {
+      chain.order = vi.fn().mockImplementation((col: string, opts: unknown) => {
         if (table === "workouts") {
           orderCalled = true;
           expect(col).toBe("created_at");
@@ -97,6 +100,7 @@ describe("GET /api/workouts", () => {
 
   it("returns 500 on DB error", async () => {
     mockFrom.mockImplementation((table: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const chain: Record<string, any> = {};
       chain.select = vi.fn().mockReturnValue(chain);
       chain.eq = vi.fn().mockReturnValue(chain);
@@ -112,7 +116,7 @@ describe("GET /api/workouts", () => {
       return chain;
     });
 
-    const res = await GET();
+    const res = (await GET())!;
     expect(res.status).toBe(500);
   });
 });
@@ -134,11 +138,12 @@ describe("POST /api/workouts", () => {
       method: "POST",
       body: JSON.stringify({ gym_id: "g1", style: "strength" }),
     });
-    const res = await POST(req);
+    const res = (await POST(req))!;
     expect(res.status).toBe(401);
   });
 
   it("creates workout with all fields", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const chain: Record<string, any> = {};
     chain.insert = vi.fn().mockReturnValue(chain);
     chain.select = vi.fn().mockReturnValue(chain);
@@ -170,6 +175,7 @@ describe("POST /api/workouts", () => {
   });
 
   it("allows null profile_id", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const chain: Record<string, any> = {};
     chain.insert = vi.fn().mockReturnValue(chain);
     chain.select = vi.fn().mockReturnValue(chain);
@@ -187,6 +193,7 @@ describe("POST /api/workouts", () => {
   });
 
   it("applies defaults", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const chain: Record<string, any> = {};
     chain.insert = vi.fn().mockReturnValue(chain);
     chain.select = vi.fn().mockReturnValue(chain);
@@ -213,6 +220,7 @@ describe("POST /api/workouts", () => {
   });
 
   it("returns 201 on success", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const chain: Record<string, any> = {};
     chain.insert = vi.fn().mockReturnValue(chain);
     chain.select = vi.fn().mockReturnValue(chain);
@@ -223,11 +231,12 @@ describe("POST /api/workouts", () => {
       method: "POST",
       body: JSON.stringify({ gym_id: "g1", style: "strength" }),
     });
-    const res = await POST(req);
+    const res = (await POST(req))!;
     expect(res.status).toBe(201);
   });
 
   it("returns 500 on DB error", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const chain: Record<string, any> = {};
     chain.insert = vi.fn().mockReturnValue(chain);
     chain.select = vi.fn().mockReturnValue(chain);
@@ -238,7 +247,7 @@ describe("POST /api/workouts", () => {
       method: "POST",
       body: JSON.stringify({ gym_id: "g1", style: "strength" }),
     });
-    const res = await POST(req);
+    const res = (await POST(req))!;
     expect(res.status).toBe(500);
   });
 });

@@ -17,7 +17,8 @@ describe("generateWorkoutSchema", () => {
   });
 
   it("rejects missing profile_id", () => {
-    const { profile_id, ...rest } = validInput;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { profile_id: _profile_id, ...rest } = validInput;
     const result = generateWorkoutSchema.safeParse(rest);
     expect(result.success).toBe(false);
   });
@@ -93,13 +94,15 @@ describe("workoutOutputSchema", () => {
   });
 
   it("requires warmup array", () => {
-    const { warmup, ...rest } = validOutput;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { warmup: _warmup, ...rest } = validOutput;
     const result = workoutOutputSchema.safeParse(rest);
     expect(result.success).toBe(false);
   });
 
   it("requires blocks array", () => {
-    const { blocks, ...rest } = validOutput;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { blocks: _blocks, ...rest } = validOutput;
     const result = workoutOutputSchema.safeParse(rest);
     expect(result.success).toBe(false);
   });

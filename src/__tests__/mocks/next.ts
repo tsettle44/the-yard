@@ -34,7 +34,6 @@ export function setupNextMocks() {
 
   vi.mock("next/link", () => ({
     default: ({ children, href, ...props }: { children: React.ReactNode; href: string }) => {
-      // @ts-expect-error - simplified mock for testing
       return { type: "a", props: { href, ...props, children } };
     },
   }));

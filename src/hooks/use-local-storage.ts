@@ -3,23 +3,22 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
-  const [storedValue, setStoredValue] = useState<T>(initialValue);
-  const [hydrated, setHydrated] = useState(false);
-  const currentValue = useRef<T>(initialValue);
-
-  useEffect(() => {
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    if (typeof window === "undefined") return initialValue;
     try {
       const item = window.localStorage.getItem(key);
-      if (item) {
-        const parsed = JSON.parse(item);
-        setStoredValue(parsed);
-        currentValue.current = parsed;
-      }
+      if (item) return JSON.parse(item) as T;
     } catch (error) {
       console.error(`Error reading localStorage key "${key}":`, error);
     }
-    setHydrated(true);
-  }, [key]);
+    return initialValue;
+  });
+  const hydrated = typeof window !== "undefined";
+  const currentValue = useRef<T>(storedValue);
+
+  useEffect(() => {
+    currentValue.current = storedValue;
+  }, [storedValue]);
 
   const setValue = useCallback(
     (value: T | ((val: T) => T)) => {

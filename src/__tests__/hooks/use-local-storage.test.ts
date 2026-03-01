@@ -35,7 +35,7 @@ describe("useLocalStorage", () => {
   });
 
   it("handles JSON serialization of complex objects", () => {
-    const { result } = renderHook(() => useLocalStorage("key", { a: 1 }));
+    const { result } = renderHook(() => useLocalStorage("key", { a: 1, b: 0 }));
     act(() => {
       result.current[1]({ a: 2, b: 3 });
     });

@@ -87,7 +87,7 @@ describe("POST /api/workout/generate", () => {
         error: { flatten: () => ({ fieldErrors: {} }) },
       });
       const req = makeRequest({});
-      const res = await POST(req);
+      const res = (await POST(req))!;
       expect(res.status).toBe(400);
     });
 
@@ -103,7 +103,7 @@ describe("POST /api/workout/generate", () => {
       vi.resetModules();
       const { POST: freshPOST } = await import("@/app/api/workout/generate/route");
       const req = makeRequest({ profile_id: "p1", gym_id: "g1", style: "strength", duration_min: 60, target_rpe: 7, body_groups: ["chest"] });
-      const res = await freshPOST(req);
+      const res = (await freshPOST(req))!;
       expect(res.status).toBe(401);
     });
 
@@ -115,7 +115,7 @@ describe("POST /api/workout/generate", () => {
 
     it("returns stream response", async () => {
       const req = makeRequest({ profile_id: "p1", gym_id: "g1", style: "strength", duration_min: 60, target_rpe: 7, body_groups: ["chest"] });
-      const res = await POST(req);
+      const res = (await POST(req))!;
       expect(res).toBeInstanceOf(Response);
     });
 
@@ -124,7 +124,7 @@ describe("POST /api/workout/generate", () => {
         throw new Error("AI Error");
       });
       const req = makeRequest({ profile_id: "p1", gym_id: "g1", style: "strength", duration_min: 60, target_rpe: 7, body_groups: ["chest"] });
-      const res = await POST(req);
+      const res = (await POST(req))!;
       expect(res.status).toBe(500);
     });
   });
@@ -140,7 +140,7 @@ describe("POST /api/workout/generate", () => {
         error: Response.json({ error: "Unauthorized" }, { status: 401 }),
       });
       const req = makeRequest({ profile_id: "p1", gym_id: "g1", style: "strength", duration_min: 60, target_rpe: 7, body_groups: ["chest"] });
-      const res = await POST(req);
+      const res = (await POST(req))!;
       expect(res.status).toBe(401);
     });
 
@@ -154,7 +154,7 @@ describe("POST /api/workout/generate", () => {
     it("returns 403 with free message when free limit reached", async () => {
       mockRpc.mockResolvedValue({ data: { allowed: false, plan: "free", used: 3, limit: 3 }, error: null });
       const req = makeRequest({ profile_id: "p1", gym_id: "g1", style: "strength", duration_min: 60, target_rpe: 7, body_groups: ["chest"] });
-      const res = await POST(req);
+      const res = (await POST(req))!;
       expect(res.status).toBe(403);
       const body = await res.json();
       expect(body.error).toContain("free generations");
@@ -163,7 +163,7 @@ describe("POST /api/workout/generate", () => {
     it("returns 403 with paid message when daily limit reached", async () => {
       mockRpc.mockResolvedValue({ data: { allowed: false, plan: "paid", used: 3, limit: 3 }, error: null });
       const req = makeRequest({ profile_id: "p1", gym_id: "g1", style: "strength", duration_min: 60, target_rpe: 7, body_groups: ["chest"] });
-      const res = await POST(req);
+      const res = (await POST(req))!;
       expect(res.status).toBe(403);
       const body = await res.json();
       expect(body.error).toContain("Daily generation limit");
@@ -172,7 +172,7 @@ describe("POST /api/workout/generate", () => {
     it("proceeds when allowed", async () => {
       mockRpc.mockResolvedValue({ data: { allowed: true, plan: "paid", used: 1, limit: 3 }, error: null });
       const req = makeRequest({ profile_id: "p1", gym_id: "g1", style: "strength", duration_min: 60, target_rpe: 7, body_groups: ["chest"] });
-      const res = await POST(req);
+      await POST(req);
       expect(mockStreamObject).toHaveBeenCalled();
     });
   });

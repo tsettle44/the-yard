@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import { makeProfile, makeGym, makeWorkout, makeEntitlement } from "../fixtures";
+import { makeProfile, makeGym, makeWorkout } from "../fixtures";
 
 export const handlers = [
   http.get("/api/health", () => {

@@ -36,7 +36,6 @@ interface SharedResourceEditorProps {
 }
 
 export function SharedResourceEditor({
-  gymId,
   equipment,
   sharedResources,
   suggestions,

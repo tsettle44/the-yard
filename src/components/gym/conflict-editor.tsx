@@ -18,7 +18,6 @@ interface ConflictEditorProps {
 }
 
 export function ConflictEditor({
-  gymId,
   equipment,
   conflicts,
   onAdd,

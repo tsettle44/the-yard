@@ -29,12 +29,12 @@ describe("POST /api/gyms/:id/shared-resources", () => {
       method: "POST",
       body: JSON.stringify({ resource_name: "Test", equipment_ids: ["a", "b"], constraint: "no_superset" }),
     });
-    const res = await POST(req, { params });
+    const res = (await POST(req, { params }))!;
     expect(res.status).toBe(401);
   });
 
   it("returns 404 when gym not owned", async () => {
-    const gymChain: Record<string, any> = {};
+    const gymChain: Record<string, unknown> = {};
     gymChain.select = vi.fn().mockReturnValue(gymChain);
     gymChain.eq = vi.fn().mockReturnValue(gymChain);
     gymChain.single = vi.fn().mockResolvedValue({ data: null, error: null });
@@ -44,17 +44,17 @@ describe("POST /api/gyms/:id/shared-resources", () => {
       method: "POST",
       body: JSON.stringify({ resource_name: "Test", equipment_ids: ["a", "b"], constraint: "no_superset" }),
     });
-    const res = await POST(req, { params });
+    const res = (await POST(req, { params }))!;
     expect(res.status).toBe(404);
   });
 
   it("maps constraint to constraint_type in insert", async () => {
-    const gymChain: Record<string, any> = {};
+    const gymChain: Record<string, unknown> = {};
     gymChain.select = vi.fn().mockReturnValue(gymChain);
     gymChain.eq = vi.fn().mockReturnValue(gymChain);
     gymChain.single = vi.fn().mockResolvedValue({ data: { id: "gym-1" }, error: null });
 
-    const srChain: Record<string, any> = {};
+    const srChain: Record<string, unknown> = {};
     srChain.insert = vi.fn().mockReturnValue(srChain);
     srChain.select = vi.fn().mockReturnValue(srChain);
     srChain.single = vi.fn().mockResolvedValue({
@@ -85,12 +85,12 @@ describe("POST /api/gyms/:id/shared-resources", () => {
   });
 
   it("maps response back to constraint field", async () => {
-    const gymChain: Record<string, any> = {};
+    const gymChain: Record<string, unknown> = {};
     gymChain.select = vi.fn().mockReturnValue(gymChain);
     gymChain.eq = vi.fn().mockReturnValue(gymChain);
     gymChain.single = vi.fn().mockResolvedValue({ data: { id: "gym-1" }, error: null });
 
-    const srChain: Record<string, any> = {};
+    const srChain: Record<string, unknown> = {};
     srChain.insert = vi.fn().mockReturnValue(srChain);
     srChain.select = vi.fn().mockReturnValue(srChain);
     srChain.single = vi.fn().mockResolvedValue({
@@ -114,19 +114,19 @@ describe("POST /api/gyms/:id/shared-resources", () => {
       method: "POST",
       body: JSON.stringify({ resource_name: "Station", equipment_ids: ["a", "b"], constraint: "no_superset" }),
     });
-    const res = await POST(req, { params });
+    const res = (await POST(req, { params }))!;
     const body = await res.json();
     expect(body.constraint).toBe("no_superset");
     expect(body).not.toHaveProperty("constraint_type");
   });
 
   it("returns 201 on success", async () => {
-    const gymChain: Record<string, any> = {};
+    const gymChain: Record<string, unknown> = {};
     gymChain.select = vi.fn().mockReturnValue(gymChain);
     gymChain.eq = vi.fn().mockReturnValue(gymChain);
     gymChain.single = vi.fn().mockResolvedValue({ data: { id: "gym-1" }, error: null });
 
-    const srChain: Record<string, any> = {};
+    const srChain: Record<string, unknown> = {};
     srChain.insert = vi.fn().mockReturnValue(srChain);
     srChain.select = vi.fn().mockReturnValue(srChain);
     srChain.single = vi.fn().mockResolvedValue({
@@ -143,17 +143,17 @@ describe("POST /api/gyms/:id/shared-resources", () => {
       method: "POST",
       body: JSON.stringify({ resource_name: "X", equipment_ids: ["a", "b"], constraint: "no_superset" }),
     });
-    const res = await POST(req, { params });
+    const res = (await POST(req, { params }))!;
     expect(res.status).toBe(201);
   });
 
   it("returns 500 on DB error", async () => {
-    const gymChain: Record<string, any> = {};
+    const gymChain: Record<string, unknown> = {};
     gymChain.select = vi.fn().mockReturnValue(gymChain);
     gymChain.eq = vi.fn().mockReturnValue(gymChain);
     gymChain.single = vi.fn().mockResolvedValue({ data: { id: "gym-1" }, error: null });
 
-    const srChain: Record<string, any> = {};
+    const srChain: Record<string, unknown> = {};
     srChain.insert = vi.fn().mockReturnValue(srChain);
     srChain.select = vi.fn().mockReturnValue(srChain);
     srChain.single = vi.fn().mockResolvedValue({ data: null, error: { message: "fail" } });
@@ -167,7 +167,7 @@ describe("POST /api/gyms/:id/shared-resources", () => {
       method: "POST",
       body: JSON.stringify({ resource_name: "X", equipment_ids: ["a", "b"], constraint: "no_superset" }),
     });
-    const res = await POST(req, { params });
+    const res = (await POST(req, { params }))!;
     expect(res.status).toBe(500);
   });
 });
