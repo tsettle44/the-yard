@@ -42,13 +42,15 @@ export async function POST(request: Request) {
         status: "completed",
       });
 
-      // Update entitlement
+      // Update entitlement — reset daily counter so paid access is immediate
       await supabase
         .from("entitlements")
         .upsert(
           {
             user_id: userId,
             plan: "paid",
+            daily_generations_used: 0,
+            last_generation_date: new Date().toISOString().split("T")[0],
             updated_at: new Date().toISOString(),
           },
           { onConflict: "user_id" }
