@@ -22,8 +22,8 @@ import { Download, Upload, Trash2, Plus, Pencil, Check, X } from "lucide-react";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
-  const { profiles } = useProfiles();
-  const { workouts } = useWorkouts();
+  const { profiles, hydrated: profilesHydrated } = useProfiles();
+  const { workouts, hydrated: workoutsHydrated } = useWorkouts();
 
   const {
     gyms,
@@ -116,6 +116,24 @@ export default function SettingsPage() {
     setNewGymName("");
   }
 
+  const allHydrated = gymHydrated && profilesHydrated && workoutsHydrated;
+
+  if (!allHydrated) {
+    return (
+      <div className="space-y-6 w-full">
+        <div>
+          <h1 className="font-black text-sm uppercase tracking-[0.2em]">Settings</h1>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Manage your preferences and data</p>
+        </div>
+        <div className="animate-pulse space-y-6">
+          <div className="h-48 bg-muted" />
+          <div className="h-24 bg-muted" />
+          <div className="h-24 bg-muted" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 w-full">
       <div>
@@ -129,10 +147,6 @@ export default function SettingsPage() {
           <CardTitle>Gym Setup</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {!gymHydrated ? (
-            <div className="animate-pulse"><div className="h-32 bg-muted" /></div>
-          ) : (
-            <>
               <div className="flex flex-wrap gap-2 items-center">
                 {gyms.map((gym) => (
                   <div key={gym.id} className="flex items-center gap-1">
@@ -261,8 +275,6 @@ export default function SettingsPage() {
                   Create a gym to get started with equipment configuration.
                 </p>
               )}
-            </>
-          )}
         </CardContent>
       </Card>
 

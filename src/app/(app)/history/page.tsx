@@ -10,8 +10,24 @@ import type { WorkoutOutput } from "@/lib/ai/schemas";
 import { Trash2, ChevronDown, ChevronUp, Star } from "lucide-react";
 
 export default function HistoryPage() {
-  const { workouts, deleteWorkout, rateWorkout } = useWorkouts();
+  const { workouts, deleteWorkout, rateWorkout, hydrated } = useWorkouts();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  if (!hydrated) {
+    return (
+      <div className="space-y-6 w-full">
+        <div>
+          <h1 className="font-black text-sm uppercase tracking-[0.2em]">History</h1>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider mt-1 font-mono">—</p>
+        </div>
+        <div className="animate-pulse space-y-3">
+          <div className="h-16 bg-muted" />
+          <div className="h-16 bg-muted" />
+          <div className="h-16 bg-muted" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 w-full">

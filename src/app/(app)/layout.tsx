@@ -1,12 +1,31 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useProfiles } from "@/hooks/use-profile";
+import { createClient } from "@/lib/supabase/client";
+import { config } from "@/lib/config";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
+
+const emptySubscribe = () => () => {};
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const { activeProfile, guestMode } = useProfiles();
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
-  const profileLabel = guestMode ? "GUEST" : activeProfile?.name?.toUpperCase() || null;
+  const profileLabel = mounted
+    ? (guestMode ? "GUEST" : activeProfile?.name?.toUpperCase() || null)
+    : null;
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -15,10 +34,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Link href="/" className="font-black text-sm uppercase tracking-[0.2em] mr-4">
             The Yard
           </Link>
-          {profileLabel && (
+          {mounted && profileLabel && (
             <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
               {profileLabel}
             </span>
+          )}
+          {mounted && config.isHosted && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="ml-auto h-8 w-8"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </Button>
           )}
         </div>
       </header>
