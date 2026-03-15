@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useProfiles } from "@/hooks/use-profile";
 import { createClient } from "@/lib/supabase/client";
@@ -13,10 +13,12 @@ const emptySubscribe = () => () => {};
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { activeProfile, guestMode } = useProfiles();
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
-  const profileLabel = mounted
+  const isGeneratePage = pathname === "/generate";
+  const profileLabel = mounted && isGeneratePage
     ? (guestMode ? "GUEST" : activeProfile?.name?.toUpperCase() || null)
     : null;
 
