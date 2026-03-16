@@ -66,8 +66,16 @@ async function run() {
     }
   }
 
+  // Notify PostgREST to reload its schema cache so new functions are available via RPC
+  try {
+    await sql`SELECT pg_notify('pgrst', 'reload schema')`;
+    console.log("\nPostgREST schema cache reload triggered.");
+  } catch {
+    console.log("\nNote: Could not notify PostgREST to reload schema cache.");
+  }
+
   await sql.end();
-  console.log("\nAll migrations applied successfully.");
+  console.log("All migrations applied successfully.");
 }
 
 run().catch(async (err) => {
