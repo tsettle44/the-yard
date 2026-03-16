@@ -54,7 +54,8 @@ describe("useEntitlement — Hosted", () => {
     );
     renderHook(() => useEntitlement());
     await waitFor(() => {
-      expect(fetchSpy).toHaveBeenCalledWith("/api/entitlement");
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toMatch(/^\/api\/entitlement\?timezone=/)
     });
     fetchSpy.mockRestore();
   });

@@ -3,7 +3,7 @@ import { config } from "@/lib/config";
 import { requireAuth } from "@/lib/api/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export async function GET() {
+export async function GET(request: Request) {
   if (!config.isHosted) {
     return NextResponse.json({ error: "Not available in self-hosted mode" }, { status: 400 });
   }
@@ -14,6 +14,12 @@ export async function GET() {
   const { user } = auth;
   const supabase = createAdminClient();
 
+  const { searchParams } = new URL(request.url);
+  const timezone = searchParams.get("timezone") || "UTC";
+
+  // Get today in the user's timezone
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: timezone });
+
   // Upsert a free row if none exists
   const { data, error } = await supabase
     .from("entitlements")
@@ -23,7 +29,7 @@ export async function GET() {
         plan: "free",
         free_generations_used: 0,
         daily_generations_used: 0,
-        last_generation_date: new Date().toISOString().split("T")[0],
+        last_generation_date: today,
       },
       { onConflict: "user_id", ignoreDuplicates: true }
     )
@@ -47,8 +53,7 @@ export async function GET() {
     const limit = plan === "free" ? config.freeGenerations : config.dailyGenerationLimit;
     const used = plan === "free" ? row.free_generations_used : row.daily_generations_used;
 
-    // Reset daily count if new day
-    const today = new Date().toISOString().split("T")[0];
+    // Reset daily count if new day in user's timezone
     const effectiveUsed = plan === "paid" && row.last_generation_date !== today ? 0 : used;
 
     return NextResponse.json({

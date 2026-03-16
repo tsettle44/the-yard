@@ -120,6 +120,7 @@ export function useWorkoutStream(): UseWorkoutStreamReturn {
             equipment_data: equipmentData,
             shared_resources_data: sharedResourcesData,
             layout_notes: layoutNotes,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           }),
         });
 

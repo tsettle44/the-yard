@@ -148,7 +148,7 @@ describe("POST /api/workout/generate", () => {
       mockRpc.mockResolvedValue({ data: { allowed: true, plan: "free", used: 1, limit: 3 }, error: null });
       const req = makeRequest({ profile_id: "p1", gym_id: "g1", style: "strength", duration_min: 60, target_rpe: 7, body_groups: ["chest"] });
       await POST(req);
-      expect(mockRpc).toHaveBeenCalledWith("check_and_increment_generation", { p_user_id: "user-123" });
+      expect(mockRpc).toHaveBeenCalledWith("check_and_increment_generation", { p_user_id: "user-123", p_timezone: "UTC" });
     });
 
     it("returns 403 with free message when free limit reached", async () => {
