@@ -1,12 +1,18 @@
--- Add daily generation tracking columns
+-- Fix: ensure generation limit columns and function exist,
+-- and notify PostgREST to reload its schema cache.
+-- This resolves "Failed to check generation limit" errors that occur when
+-- PostgREST's schema cache doesn't include the check_and_increment_generation function.
+
+-- Ensure columns exist (idempotent)
 ALTER TABLE entitlements ADD COLUMN IF NOT EXISTS daily_generations_used INTEGER DEFAULT 0;
 ALTER TABLE entitlements ADD COLUMN IF NOT EXISTS last_generation_date DATE DEFAULT CURRENT_DATE;
 
--- Atomic check-and-increment function for generation limits
+-- Re-create the function (CREATE OR REPLACE is idempotent)
 CREATE OR REPLACE FUNCTION check_and_increment_generation(p_user_id UUID)
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   v_row entitlements%ROWTYPE;
@@ -71,5 +77,5 @@ BEGIN
 END;
 $$;
 
--- Notify PostgREST to reload its schema cache so the new function is available via RPC
+-- Notify PostgREST to reload its schema cache
 NOTIFY pgrst, 'reload schema';
