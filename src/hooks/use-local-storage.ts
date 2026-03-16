@@ -36,7 +36,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
   }, [storedValue]);
 
   // Listen for changes from other useLocalStorage instances with the same key
-  const listenerRef = useRef<(value: unknown) => void>();
+  const listenerRef = useRef<(value: unknown) => void>(undefined);
   if (!listenerRef.current) {
     listenerRef.current = (value: unknown) => {
       currentValue.current = value as T;
