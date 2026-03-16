@@ -28,7 +28,8 @@ export function useEntitlement(): UseEntitlementReturn {
 
     try {
       setLoading(true);
-      const res = await fetch("/api/entitlement");
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const res = await fetch(`/api/entitlement?timezone=${encodeURIComponent(tz)}`);
       if (res.ok) {
         const json: EntitlementData = await res.json();
         setData(json);

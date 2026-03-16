@@ -81,6 +81,33 @@ describe("useLocalStorage", () => {
     expect(result.current[0]).toEqual([1, 2, 3]);
   });
 
+  it("syncs across multiple hooks with the same key", () => {
+    const { result: hookA } = renderHook(() => useLocalStorage("shared-key", "initial"));
+    const { result: hookB } = renderHook(() => useLocalStorage("shared-key", "initial"));
+
+    // Both start with the same value
+    expect(hookA.current[0]).toBe("initial");
+    expect(hookB.current[0]).toBe("initial");
+
+    // Update from hookA
+    act(() => {
+      hookA.current[1]("updated-by-a");
+    });
+
+    // hookB should reflect the change
+    expect(hookA.current[0]).toBe("updated-by-a");
+    expect(hookB.current[0]).toBe("updated-by-a");
+
+    // Update from hookB
+    act(() => {
+      hookB.current[1]("updated-by-b");
+    });
+
+    // hookA should reflect the change
+    expect(hookA.current[0]).toBe("updated-by-b");
+    expect(hookB.current[0]).toBe("updated-by-b");
+  });
+
   it("re-reads when key changes", () => {
     localStorage.setItem("key1", JSON.stringify("value1"));
     localStorage.setItem("key2", JSON.stringify("value2"));

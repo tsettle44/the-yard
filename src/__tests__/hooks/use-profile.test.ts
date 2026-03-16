@@ -206,4 +206,56 @@ describe("useProfiles — Self-hosted", () => {
     const { result } = renderHook(() => useProfiles());
     expect(result.current.loading).toBe(false);
   });
+
+  it("syncs activeProfile across independent hook instances when switching profiles", () => {
+    // Simulates layout + page each calling useProfiles independently
+    const { result: layout } = renderHook(() => useProfiles());
+    const { result: page } = renderHook(() => useProfiles());
+
+    let profileA: string;
+    let profileB: string;
+
+    // Add two profiles from the page instance
+    act(() => {
+      const a = page.current.addProfile({
+        name: "Alice",
+        fitness_level: "beginner",
+        preferred_styles: [],
+        goals: "",
+        preferences: {},
+        is_default: false,
+      });
+      profileA = a.id;
+    });
+    act(() => {
+      const b = page.current.addProfile({
+        name: "Bob",
+        fitness_level: "intermediate",
+        preferred_styles: [],
+        goals: "",
+        preferences: {},
+        is_default: false,
+      });
+      profileB = b.id;
+    });
+
+    // Select Alice from the page
+    act(() => {
+      page.current.setGuestMode(false);
+      page.current.setActiveProfileId(profileA!);
+    });
+
+    // Layout should see Alice
+    expect(layout.current.activeProfile?.name).toBe("Alice");
+    expect(layout.current.activeProfileId).toBe(profileA!);
+
+    // Switch to Bob from the page
+    act(() => {
+      page.current.setActiveProfileId(profileB!);
+    });
+
+    // Layout should see Bob without a refresh
+    expect(layout.current.activeProfile?.name).toBe("Bob");
+    expect(layout.current.activeProfileId).toBe(profileB!);
+  });
 });

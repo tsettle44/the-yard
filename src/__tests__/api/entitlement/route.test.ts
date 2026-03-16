@@ -30,6 +30,10 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 import { GET } from "@/app/api/entitlement/route";
 
+function makeRequest(tz = "UTC") {
+  return new Request(`http://localhost/api/entitlement?timezone=${encodeURIComponent(tz)}`);
+}
+
 function setupChain(data: unknown, error: unknown = null) {
   const chain = {
     upsert: mockAdminUpsert.mockReturnThis(),
@@ -50,7 +54,7 @@ describe("GET /api/entitlement", () => {
 
   it("returns 400 in self-hosted mode", async () => {
     mockIsHosted = false;
-    const res = (await GET())!;
+    const res = (await GET(makeRequest()))!;
     expect(res.status).toBe(400);
   });
 
@@ -58,7 +62,7 @@ describe("GET /api/entitlement", () => {
     mockRequireAuth.mockResolvedValue({
       error: Response.json({ error: "Unauthorized" }, { status: 401 }),
     });
-    const res = (await GET())!;
+    const res = (await GET(makeRequest()))!;
     expect(res.status).toBe(401);
   });
 
@@ -69,7 +73,7 @@ describe("GET /api/entitlement", () => {
       daily_generations_used: 0,
       last_generation_date: "2025-01-01",
     });
-    const res = (await GET())!;
+    const res = (await GET(makeRequest()))!;
     const body = await res.json();
     expect(body.plan).toBe("free");
     expect(body.canGenerate).toBe(true);
@@ -83,7 +87,7 @@ describe("GET /api/entitlement", () => {
       daily_generations_used: 0,
       last_generation_date: "2025-01-01",
     });
-    const res = (await GET())!;
+    const res = (await GET(makeRequest()))!;
     const body = await res.json();
     expect(body.plan).toBe("free");
     expect(body.used).toBe(2);
@@ -93,13 +97,14 @@ describe("GET /api/entitlement", () => {
   });
 
   it("returns correct paid limits", async () => {
+    const today = new Date().toLocaleDateString("en-CA", { timeZone: "UTC" });
     setupChain({
       plan: "paid",
       free_generations_used: 3,
       daily_generations_used: 1,
-      last_generation_date: new Date().toISOString().split("T")[0],
+      last_generation_date: today,
     });
-    const res = (await GET())!;
+    const res = (await GET(makeRequest()))!;
     const body = await res.json();
     expect(body.plan).toBe("paid");
     expect(body.limit).toBe(3);
@@ -107,35 +112,13 @@ describe("GET /api/entitlement", () => {
 
   it("resets daily count for paid users on new day", async () => {
     // Upsert fails (row exists), fallback fetch returns yesterday's date
-    const chain = {
-      upsert: mockAdminUpsert.mockReturnThis(),
-      select: mockAdminSelect.mockReturnThis(),
-      single: mockAdminSingle.mockResolvedValue({
-        data: null,
-        error: { message: "duplicate" },
-      }),
-      eq: mockAdminEq.mockReturnThis(),
-    };
-    mockAdminFrom.mockReturnValue(chain);
-
-    // Fallback fetch
-    chain.single = vi.fn().mockResolvedValue({
-      data: {
-        plan: "paid",
-        free_generations_used: 3,
-        daily_generations_used: 3,
-        last_generation_date: "2020-01-01", // old date
-      },
-      error: null,
-    });
-    // Re-mock from to return the fallback chain for the second call
     let callCount = 0;
     mockAdminFrom.mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
         return {
-          upsert: mockAdminUpsert.mockReturnValue({
-            select: mockAdminSelect.mockReturnValue({
+          upsert: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
               single: vi.fn().mockResolvedValue({ data: null, error: { message: "dup" } }),
             }),
           }),
@@ -158,7 +141,7 @@ describe("GET /api/entitlement", () => {
       };
     });
 
-    const res = (await GET())!;
+    const res = (await GET(makeRequest()))!;
     const body = await res.json();
     expect(body.used).toBe(0); // Reset because it's a new day
     expect(body.canGenerate).toBe(true);
@@ -187,7 +170,7 @@ describe("GET /api/entitlement", () => {
       };
     });
 
-    const res = (await GET())!;
+    const res = (await GET(makeRequest()))!;
     expect(res.status).toBe(500);
   });
 });

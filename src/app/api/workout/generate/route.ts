@@ -17,10 +17,11 @@ export async function POST(request: Request) {
       const auth = await requireAuth();
       if ("error" in auth) return auth.error;
 
+      const body = await request.clone().json();
       const supabase = createAdminClient();
       const { data: result, error: rpcError } = await supabase.rpc(
         "check_and_increment_generation",
-        { p_user_id: auth.user.id }
+        { p_user_id: auth.user.id, p_timezone: body.timezone || "UTC" }
       );
 
       if (rpcError) {
