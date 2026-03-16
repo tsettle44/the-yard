@@ -37,15 +37,14 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
 
   // Listen for changes from other useLocalStorage instances with the same key
   const listenerRef = useRef<(value: unknown) => void>(undefined);
-  if (!listenerRef.current) {
-    listenerRef.current = (value: unknown) => {
+
+  useEffect(() => {
+    const listener = (value: unknown) => {
       currentValue.current = value as T;
       setStoredValue(value as T);
     };
-  }
-
-  useEffect(() => {
-    return subscribe(key, listenerRef.current!);
+    listenerRef.current = listener;
+    return subscribe(key, listener);
   }, [key]);
 
   // Listen for cross-tab storage events
@@ -71,7 +70,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
         currentValue.current = valueToStore;
         setStoredValue(valueToStore);
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
-        notify(key, valueToStore, listenerRef.current!);
+        if (listenerRef.current) notify(key, valueToStore, listenerRef.current);
       } catch (error) {
         console.error(`Error setting localStorage key "${key}":`, error);
       }
