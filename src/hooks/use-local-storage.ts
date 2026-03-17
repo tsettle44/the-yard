@@ -35,6 +35,19 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     currentValue.current = storedValue;
   }, [storedValue]);
 
+  // Re-read from localStorage when key changes (useState initializer only runs on first mount)
+  useEffect(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      const value = item ? (JSON.parse(item) as T) : initialValue;
+      currentValue.current = value;
+      setStoredValue(value);
+    } catch (error) {
+      console.error(`Error reading localStorage key "${key}":`, error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
   // Listen for changes from other useLocalStorage instances with the same key
   const listenerRef = useRef<(value: unknown) => void>(undefined);
 
