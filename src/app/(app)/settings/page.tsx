@@ -18,7 +18,8 @@ import { EquipmentCategory } from "@/types/gym";
 import { getApplicableSuggestions } from "@/lib/equipment/registry";
 import { config } from "@/lib/config";
 import { toast } from "sonner";
-import { Download, Upload, Trash2, Plus, Pencil, Check, X } from "lucide-react";
+import { useOnboarding } from "@/hooks/use-onboarding";
+import { Download, Upload, Trash2, Plus, Pencil, Check, X, RotateCcw } from "lucide-react";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -42,6 +43,7 @@ export default function SettingsPage() {
     hydrated: gymHydrated,
   } = useGym();
 
+  const { resetTour } = useOnboarding();
   const [newGymName, setNewGymName] = useState("");
   const [editingName, setEditingName] = useState<string | null>(null);
   const [editNameValue, setEditNameValue] = useState("");
@@ -316,6 +318,15 @@ export default function SettingsPage() {
                 <Upload className="mr-2 h-4 w-4" /> Import
               </Button>
             )}
+            <Button
+              variant="outline"
+              onClick={() => {
+                resetTour();
+                toast.success("Tour reset. Visit the home page to replay it.");
+              }}
+            >
+              <RotateCcw className="mr-2 h-4 w-4" /> Replay Tour
+            </Button>
           </div>
           {!config.isHosted && (
             <>

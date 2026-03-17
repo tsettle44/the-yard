@@ -4,7 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useProfiles } from "@/hooks/use-profile";
+import { useOnboarding } from "@/hooks/use-onboarding";
 import { ProfileFormDialog } from "@/components/profiles/profile-form-dialog";
+import { OnboardingTour } from "@/components/onboarding/tour";
 import { ProfileCard } from "@/components/profiles/profile-card";
 import { Button } from "@/components/ui/button";
 import { Profile } from "@/types/profile";
@@ -23,6 +25,7 @@ export default function HomePage() {
     hydrated,
   } = useProfiles();
 
+  const { shouldShowTour, completeTour } = useOnboarding();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
 
@@ -113,6 +116,8 @@ export default function HomePage() {
           </Link>
         </div>
       </div>
+
+      <OnboardingTour open={shouldShowTour} onComplete={completeTour} />
 
       <ProfileFormDialog
         open={dialogOpen}
