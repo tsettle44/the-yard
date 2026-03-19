@@ -16,6 +16,22 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  async function handleGoogleLogin() {
+    setLoading(true);
+    setError("");
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/callback`,
+      },
+    });
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    }
+  }
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -57,6 +73,23 @@ export default function LoginPage() {
             <CardTitle>Sign In to The Yard</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+            >
+              Continue with Google
+            </Button>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">or</span>
+              </div>
+            </div>
             {error && (
               <div className="p-3 border border-destructive text-destructive text-sm">
                 {error}
