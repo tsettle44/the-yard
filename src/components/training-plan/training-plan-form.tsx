@@ -13,6 +13,7 @@ import {
   DayOfWeek,
   TrainingPlanRequest,
 } from "@/types/training-plan";
+import { Equipment } from "@/types/gym";
 
 const eventTypes: { value: EventType; label: string }[] = [
   { value: "marathon", label: "Marathon" },
@@ -51,9 +52,10 @@ const hourOptions = [0.5, 1, 1.5, 2, 2.5, 3, 4];
 interface TrainingPlanFormProps {
   onGenerate: (request: TrainingPlanRequest) => void;
   isStreaming: boolean;
+  equipment: Equipment[];
 }
 
-export function TrainingPlanForm({ onGenerate, isStreaming }: TrainingPlanFormProps) {
+export function TrainingPlanForm({ onGenerate, isStreaming, equipment }: TrainingPlanFormProps) {
   const [step, setStep] = useState(0);
   const [eventType, setEventType] = useState<EventType>("marathon");
   const [eventName, setEventName] = useState("");
@@ -64,7 +66,6 @@ export function TrainingPlanForm({ onGenerate, isStreaming }: TrainingPlanFormPr
   const [goals, setGoals] = useState("");
   const [currentFitness, setCurrentFitness] = useState("");
   const [injuriesLimitations, setInjuriesLimitations] = useState("");
-  const [equipmentAvailable, setEquipmentAvailable] = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
 
   const totalSteps = 4;
@@ -106,7 +107,6 @@ export function TrainingPlanForm({ onGenerate, isStreaming }: TrainingPlanFormPr
       goals,
       current_fitness: currentFitness,
       injuries_limitations: injuriesLimitations,
-      equipment_available: equipmentAvailable,
       additional_notes: additionalNotes,
     });
   }
@@ -279,16 +279,24 @@ export function TrainingPlanForm({ onGenerate, isStreaming }: TrainingPlanFormPr
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="equipment">Equipment Available</Label>
-                <Textarea
-                  id="equipment"
-                  value={equipmentAvailable}
-                  onChange={(e) => setEquipmentAvailable(e.target.value)}
-                  placeholder="e.g. Home gym with dumbbells, treadmill, access to a pool"
-                  rows={2}
-                />
-              </div>
+              {equipment.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Equipment (from Settings)</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {equipment.map((e) => (
+                      <span
+                        key={e.id}
+                        className="inline-flex items-center px-2 py-0.5 text-xs border border-border rounded text-muted-foreground"
+                      >
+                        {e.name}{e.quantity > 1 ? ` x${e.quantity}` : ""}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Manage equipment in Settings &rarr; Gym
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="additional-notes">Additional Notes</Label>

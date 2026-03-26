@@ -16,7 +16,6 @@ export const generateTrainingPlanSchema = z.object({
   goals: z.string().optional().default(""),
   current_fitness: z.string().optional().default(""),
   injuries_limitations: z.string().optional().default(""),
-  equipment_available: z.string().optional().default(""),
   additional_notes: z.string().optional().default(""),
 });
 

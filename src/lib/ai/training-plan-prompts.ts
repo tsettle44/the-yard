@@ -1,4 +1,5 @@
 import { TrainingPlanRequest } from "@/types/training-plan";
+import { Equipment } from "@/types/gym";
 
 export function buildTrainingPlanSystemPrompt(): string {
   return `You are an expert endurance and fitness coach who creates detailed, periodized training plans. You design plans that are safe, progressive, and tailored to the athlete's goals, experience level, and schedule.
@@ -36,6 +37,8 @@ CRITICAL RULES:
 
 10. For multi-sport events (Hyrox, triathlon, Spartan), include sport-specific training for each discipline.
 
+11. Only use equipment the athlete has available. If equipment is listed, incorporate it into strength and cross-training sessions where appropriate.
+
 OUTPUT FORMAT:
 - Provide a complete week-by-week plan with specific sessions.
 - Each session needs a date, title, type, duration, description, intensity level, and detailed breakdown.
@@ -43,7 +46,13 @@ OUTPUT FORMAT:
 - Include race day tips and important notes.`;
 }
 
-export function buildTrainingPlanUserPrompt(req: TrainingPlanRequest): string {
+interface TrainingPlanPromptContext {
+  request: TrainingPlanRequest;
+  equipment: Equipment[];
+}
+
+export function buildTrainingPlanUserPrompt(ctx: TrainingPlanPromptContext): string {
+  const { request: req, equipment } = ctx;
   const dayNames = req.available_days
     .map((d) => d.charAt(0).toUpperCase() + d.slice(1))
     .join(", ");
@@ -69,9 +78,17 @@ export function buildTrainingPlanUserPrompt(req: TrainingPlanRequest): string {
   if (req.injuries_limitations) {
     sections.push(``, `**Injuries/Limitations:** ${req.injuries_limitations}`);
   }
-  if (req.equipment_available) {
-    sections.push(``, `**Equipment Available:** ${req.equipment_available}`);
+
+  if (equipment.length > 0) {
+    const equipmentList = equipment
+      .map((e) => {
+        const qty = e.quantity > 1 ? ` x${e.quantity}` : "";
+        return `- ${e.name}${qty} (${e.category})`;
+      })
+      .join("\n");
+    sections.push(``, `**Available Equipment:**`, equipmentList);
   }
+
   if (req.additional_notes) {
     sections.push(``, `**Additional Notes:** ${req.additional_notes}`);
   }

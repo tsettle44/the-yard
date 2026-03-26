@@ -26,7 +26,6 @@ export interface TrainingPlanRequest {
   goals: string;
   current_fitness: string;
   injuries_limitations: string;
-  equipment_available: string;
   additional_notes: string;
 }
 

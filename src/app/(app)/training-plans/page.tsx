@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useGym } from "@/hooks/use-gym";
 import { useTrainingPlanStream } from "@/hooks/use-training-plan-stream";
 import { TrainingPlanForm } from "@/components/training-plan/training-plan-form";
 import { TrainingPlanCalendar } from "@/components/training-plan/training-plan-calendar";
@@ -10,11 +11,15 @@ import type { TrainingPlanOutputType } from "@/lib/ai/training-plan-schemas";
 import { toast } from "sonner";
 
 export default function TrainingPlansPage() {
+  const { activeGym } = useGym();
   const { plan, isStreaming, error, generate, reset } = useTrainingPlanStream();
   const [view, setView] = useState<"form" | "plan">("form");
 
   function handleGenerate(request: TrainingPlanRequest) {
-    generate(request);
+    generate({
+      request,
+      equipmentData: activeGym?.equipment || [],
+    });
     setView("plan");
   }
 
@@ -49,7 +54,11 @@ export default function TrainingPlansPage() {
 
   return (
     <div className="max-w-lg mx-auto">
-      <TrainingPlanForm onGenerate={handleGenerate} isStreaming={isStreaming} />
+      <TrainingPlanForm
+        onGenerate={handleGenerate}
+        isStreaming={isStreaming}
+        equipment={activeGym?.equipment || []}
+      />
     </div>
   );
 }

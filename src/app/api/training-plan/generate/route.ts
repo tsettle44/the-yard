@@ -4,6 +4,7 @@ import { buildTrainingPlanSystemPrompt, buildTrainingPlanUserPrompt } from "@/li
 import { generateTrainingPlanSchema, trainingPlanOutputSchema } from "@/lib/ai/training-plan-schemas";
 import { config } from "@/lib/config";
 import { requireAuth } from "@/lib/api/auth";
+import { Equipment } from "@/types/gym";
 
 export const maxDuration = 120;
 
@@ -33,11 +34,13 @@ export async function POST(request: Request) {
       );
     }
 
+    const equipment: Equipment[] = body.equipment_data || [];
+
     const anthropic = getAIClient(apiKey);
     const result = streamObject({
       model: anthropic(DEFAULT_MODEL),
       system: buildTrainingPlanSystemPrompt(),
-      prompt: buildTrainingPlanUserPrompt(parsed.data),
+      prompt: buildTrainingPlanUserPrompt({ request: parsed.data, equipment }),
       schema: trainingPlanOutputSchema,
     });
 

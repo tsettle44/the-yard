@@ -2,14 +2,20 @@
 
 import { useState, useCallback } from "react";
 import { TrainingPlanRequest } from "@/types/training-plan";
+import { Equipment } from "@/types/gym";
 import type { TrainingPlanOutputType } from "@/lib/ai/training-plan-schemas";
+
+interface GenerateOptions {
+  request: TrainingPlanRequest;
+  equipmentData?: Equipment[];
+}
 
 interface UseTrainingPlanStreamReturn {
   plan: Partial<TrainingPlanOutputType> | null;
   rawJson: string;
   isStreaming: boolean;
   error: string | null;
-  generate: (request: TrainingPlanRequest) => Promise<void>;
+  generate: (options: GenerateOptions) => Promise<void>;
   reset: () => void;
 }
 
@@ -78,7 +84,7 @@ export function useTrainingPlanStream(): UseTrainingPlanStreamReturn {
     setError(null);
   }, []);
 
-  const generate = useCallback(async (request: TrainingPlanRequest) => {
+  const generate = useCallback(async ({ request, equipmentData }: GenerateOptions) => {
     setPlan(null);
     setRawJson("");
     setError(null);
@@ -88,7 +94,10 @@ export function useTrainingPlanStream(): UseTrainingPlanStreamReturn {
       const res = await fetch("/api/training-plan/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(request),
+        body: JSON.stringify({
+          ...request,
+          equipment_data: equipmentData,
+        }),
       });
 
       if (!res.ok) {
@@ -101,6 +110,7 @@ export function useTrainingPlanStream(): UseTrainingPlanStreamReturn {
 
       const decoder = new TextDecoder();
       let accumulated = "";
+      let lastParsed: Partial<TrainingPlanOutputType> | null = null;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -110,14 +120,21 @@ export function useTrainingPlanStream(): UseTrainingPlanStreamReturn {
 
         const parsed = tryParsePartialJson(accumulated);
         if (parsed) {
+          lastParsed = parsed;
           setPlan(parsed);
         }
       }
 
+      // Final parse
       setRawJson(accumulated);
       const finalParsed = tryParsePartialJson(accumulated);
       if (finalParsed) {
         setPlan(finalParsed);
+      } else if (lastParsed) {
+        // If final parse fails but we had a good partial result, keep it
+        // and show a warning rather than losing everything
+        setPlan(lastParsed);
+        setError("Plan generation was interrupted. Showing partial results.");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
