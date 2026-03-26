@@ -33,13 +33,43 @@ const typeIcons: Record<string, string> = {
   recovery: "🧘",
 };
 
+/** Validates that a date string is a complete YYYY-MM-DD and creates a valid Date */
+function isValidDateStr(dateStr: unknown): dateStr is string {
+  if (typeof dateStr !== "string") return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
+  const d = new Date(dateStr + "T00:00:00");
+  return !isNaN(d.getTime());
+}
+
+/** Check if a session has the minimum fields needed to render */
+function isRenderableSession(
+  session: Record<string, unknown>
+): session is {
+  date: string;
+  title: string;
+  type: string;
+  intensity: string;
+  duration_minutes: number;
+  day_of_week: string;
+  description: string;
+  details: string[];
+} {
+  return (
+    isValidDateStr(session.date) &&
+    typeof session.title === "string" &&
+    session.title.length > 0 &&
+    typeof session.type === "string"
+  );
+}
+
 function getMonthsFromSessions(
   weeks: TrainingPlanOutputType["weeks"]
 ): { year: number; month: number }[] {
   const months = new Map<string, { year: number; month: number }>();
   for (const week of weeks) {
+    if (!Array.isArray(week?.sessions)) continue;
     for (const session of week.sessions) {
-      if (!session.date) continue;
+      if (!isValidDateStr(session?.date)) continue;
       const d = new Date(session.date + "T00:00:00");
       const key = `${d.getFullYear()}-${d.getMonth()}`;
       if (!months.has(key)) {
@@ -61,10 +91,18 @@ function getFirstDayOfWeek(year: number, month: number): number {
   return day === 0 ? 6 : day - 1; // Monday = 0
 }
 
-type SessionInfo = TrainingPlanOutputType["weeks"][number]["sessions"][number] & {
+interface SessionInfo {
+  date: string;
+  day_of_week: string;
+  title: string;
+  type: string;
+  duration_minutes: number;
+  description: string;
+  intensity: string;
+  details: string[];
   week_number: number;
   phase: string;
-};
+}
 
 export function TrainingPlanCalendar({
   plan,
@@ -77,7 +115,11 @@ export function TrainingPlanCalendar({
 
   const months = useMemo(() => {
     if (!plan?.weeks?.length) return [];
-    return getMonthsFromSessions(plan.weeks as TrainingPlanOutputType["weeks"]);
+    try {
+      return getMonthsFromSessions(plan.weeks as TrainingPlanOutputType["weeks"]);
+    } catch {
+      return [];
+    }
   }, [plan?.weeks]);
 
   const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
@@ -85,21 +127,32 @@ export function TrainingPlanCalendar({
   const sessionsByDate = useMemo(() => {
     const map = new Map<string, SessionInfo>();
     if (!plan?.weeks) return map;
-    for (const week of plan.weeks) {
-      if (!week.sessions) continue;
-      for (const session of week.sessions) {
-        if (!session.date) continue;
-        map.set(session.date, {
-          ...session,
-          week_number: week.week_number,
-          phase: week.phase,
-        } as SessionInfo);
+    try {
+      for (const week of plan.weeks) {
+        if (!Array.isArray(week?.sessions) || !week.week_number || !week.phase) continue;
+        for (const session of week.sessions) {
+          if (!isRenderableSession(session as Record<string, unknown>)) continue;
+          map.set(session.date, {
+            date: session.date,
+            day_of_week: session.day_of_week || "",
+            title: session.title,
+            type: session.type,
+            duration_minutes: session.duration_minutes || 0,
+            description: session.description || "",
+            intensity: session.intensity || "easy",
+            details: Array.isArray(session.details) ? session.details.filter((d): d is string => typeof d === "string") : [],
+            week_number: week.week_number,
+            phase: week.phase,
+          });
+        }
       }
+    } catch {
+      // Silently handle parse errors during streaming
     }
     return map;
   }, [plan?.weeks]);
 
-  if (error) {
+  if (error && !plan?.weeks?.length) {
     return (
       <Card>
         <CardContent className="py-8 text-center space-y-4">
@@ -113,7 +166,7 @@ export function TrainingPlanCalendar({
     );
   }
 
-  if (isStreaming && !plan?.weeks?.length) {
+  if (isStreaming && !months.length) {
     return (
       <Card>
         <CardContent className="py-12 text-center space-y-4">
@@ -131,11 +184,12 @@ export function TrainingPlanCalendar({
     );
   }
 
-  if (!plan?.weeks?.length) {
+  if (!months.length) {
     return null;
   }
 
-  const currentMonth = months[currentMonthIndex] || months[0];
+  const safeMonthIndex = Math.min(currentMonthIndex, months.length - 1);
+  const currentMonth = months[safeMonthIndex] || months[0];
   if (!currentMonth) return null;
 
   const daysInMonth = getDaysInMonth(currentMonth.year, currentMonth.month);
@@ -168,8 +222,15 @@ export function TrainingPlanCalendar({
         </div>
       </div>
 
+      {/* Error banner (shown alongside partial results) */}
+      {error && (
+        <div className="p-3 border border-yellow-500/30 bg-yellow-500/10 text-sm text-yellow-700 dark:text-yellow-400">
+          {error}
+        </div>
+      )}
+
       {/* Plan overview */}
-      {plan.plan_name && (
+      {plan?.plan_name && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">{plan.plan_name}</CardTitle>
@@ -181,9 +242,11 @@ export function TrainingPlanCalendar({
             {plan.phases && plan.phases.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {plan.phases.map((phase, i) => (
-                  <Badge key={i} variant="outline" className="text-xs">
-                    {phase.name}: {phase.weeks}
-                  </Badge>
+                  phase?.name && phase?.weeks ? (
+                    <Badge key={i} variant="outline" className="text-xs">
+                      {phase.name}: {phase.weeks}
+                    </Badge>
+                  ) : null
                 ))}
               </div>
             )}
@@ -204,8 +267,8 @@ export function TrainingPlanCalendar({
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => setCurrentMonthIndex(Math.max(0, currentMonthIndex - 1))}
-              disabled={currentMonthIndex === 0}
+              onClick={() => setCurrentMonthIndex(Math.max(0, safeMonthIndex - 1))}
+              disabled={safeMonthIndex === 0}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -215,9 +278,9 @@ export function TrainingPlanCalendar({
               size="icon"
               className="h-8 w-8"
               onClick={() =>
-                setCurrentMonthIndex(Math.min(months.length - 1, currentMonthIndex + 1))
+                setCurrentMonthIndex(Math.min(months.length - 1, safeMonthIndex + 1))
               }
-              disabled={currentMonthIndex >= months.length - 1}
+              disabled={safeMonthIndex >= months.length - 1}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -267,7 +330,7 @@ export function TrainingPlanCalendar({
                           intensityColors[session.intensity] || ""
                         }`}
                       >
-                        {session.title?.length > 12
+                        {(session.title || "").length > 12
                           ? session.title.slice(0, 12) + "..."
                           : session.title}
                       </div>
@@ -288,20 +351,26 @@ export function TrainingPlanCalendar({
               <CardTitle className="text-base">
                 {typeIcons[selectedSession.type] || "📋"} {selectedSession.title}
               </CardTitle>
-              <Badge
-                variant="outline"
-                className={intensityColors[selectedSession.intensity] || ""}
-              >
-                {selectedSession.intensity}
-              </Badge>
+              {selectedSession.intensity && (
+                <Badge
+                  variant="outline"
+                  className={intensityColors[selectedSession.intensity] || ""}
+                >
+                  {selectedSession.intensity}
+                </Badge>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
-              {selectedSession.day_of_week}, {selectedSession.date} &middot;{" "}
-              {selectedSession.duration_minutes} min &middot; Week {selectedSession.week_number} ({selectedSession.phase})
+              {selectedSession.day_of_week}{selectedSession.day_of_week ? ", " : ""}{selectedSession.date}
+              {selectedSession.duration_minutes ? ` · ${selectedSession.duration_minutes} min` : ""}
+              {selectedSession.week_number ? ` · Week ${selectedSession.week_number}` : ""}
+              {selectedSession.phase ? ` (${selectedSession.phase})` : ""}
             </p>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm">{selectedSession.description}</p>
+            {selectedSession.description && (
+              <p className="text-sm">{selectedSession.description}</p>
+            )}
             {selectedSession.details && selectedSession.details.length > 0 && (
               <div className="space-y-1">
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -322,7 +391,7 @@ export function TrainingPlanCalendar({
       )}
 
       {/* Race day tips and notes */}
-      {!isStreaming && plan.race_day_tips && plan.race_day_tips.length > 0 && (
+      {!isStreaming && plan?.race_day_tips && plan.race_day_tips.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">🏁 Race Day Tips</CardTitle>
@@ -330,17 +399,19 @@ export function TrainingPlanCalendar({
           <CardContent>
             <ul className="space-y-1">
               {plan.race_day_tips.map((tip, i) => (
-                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                  <span className="text-muted-foreground/50 mt-1">•</span>
-                  {tip}
-                </li>
+                typeof tip === "string" ? (
+                  <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                    <span className="text-muted-foreground/50 mt-1">•</span>
+                    {tip}
+                  </li>
+                ) : null
               ))}
             </ul>
           </CardContent>
         </Card>
       )}
 
-      {!isStreaming && plan.notes && plan.notes.length > 0 && (
+      {!isStreaming && plan?.notes && plan.notes.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">📝 Important Notes</CardTitle>
@@ -348,10 +419,12 @@ export function TrainingPlanCalendar({
           <CardContent>
             <ul className="space-y-1">
               {plan.notes.map((note, i) => (
-                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                  <span className="text-muted-foreground/50 mt-1">•</span>
-                  {note}
-                </li>
+                typeof note === "string" ? (
+                  <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                    <span className="text-muted-foreground/50 mt-1">•</span>
+                    {note}
+                  </li>
+                ) : null
               ))}
             </ul>
           </CardContent>

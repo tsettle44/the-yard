@@ -199,4 +199,105 @@ describe("TrainingPlanCalendar", () => {
     expect(screen.getByText(/16 weeks/)).toBeInTheDocument();
     expect(screen.getByText(/16 weeks.*marathon/)).toBeInTheDocument();
   });
+
+  describe("streaming with partial data", () => {
+    it("does not crash with incomplete session data", () => {
+      const partialPlan: Partial<TrainingPlanOutputType> = {
+        plan_name: "Test Plan",
+        overview: "Overview",
+        weeks: [
+          {
+            week_number: 1,
+            phase: "Base",
+            focus: "Easy",
+            sessions: [
+              // Session missing title and type (partially streamed)
+              { date: "2026-07-06", day_of_week: "Monday", title: "", type: "", duration_minutes: 0, description: "", intensity: "easy", details: [] },
+            ],
+          },
+        ],
+      };
+      // Should not throw
+      const { container } = render(
+        <TrainingPlanCalendar
+          plan={partialPlan}
+          isStreaming={true}
+          error={null}
+          onBack={vi.fn()}
+          onExport={vi.fn()}
+        />
+      );
+      expect(container).toBeTruthy();
+    });
+
+    it("does not crash with invalid date strings", () => {
+      const partialPlan: Partial<TrainingPlanOutputType> = {
+        plan_name: "Test Plan",
+        overview: "Overview",
+        weeks: [
+          {
+            week_number: 1,
+            phase: "Base",
+            focus: "Easy",
+            sessions: [
+              // Partial date from streaming (not yet complete)
+              { date: "2026-07" as string, day_of_week: "Monday", title: "Run", type: "run", duration_minutes: 30, description: "Test", intensity: "easy", details: [] },
+            ],
+          },
+        ],
+      };
+      const { container } = render(
+        <TrainingPlanCalendar
+          plan={partialPlan}
+          isStreaming={true}
+          error={null}
+          onBack={vi.fn()}
+          onExport={vi.fn()}
+        />
+      );
+      expect(container).toBeTruthy();
+    });
+
+    it("does not crash when sessions array is undefined on a week", () => {
+      const partialPlan: Partial<TrainingPlanOutputType> = {
+        plan_name: "Test Plan",
+        overview: "Overview",
+        weeks: [
+          {
+            week_number: 1,
+            phase: "Base",
+            focus: "Easy",
+            sessions: [],
+          },
+          // Simulate a partially-parsed week with no sessions yet
+          { week_number: 2, phase: "Build", focus: "More" } as TrainingPlanOutputType["weeks"][number],
+        ],
+      };
+      const { container } = render(
+        <TrainingPlanCalendar
+          plan={partialPlan}
+          isStreaming={true}
+          error={null}
+          onBack={vi.fn()}
+          onExport={vi.fn()}
+        />
+      );
+      expect(container).toBeTruthy();
+    });
+
+    it("shows error banner alongside partial results", () => {
+      render(
+        <TrainingPlanCalendar
+          plan={mockPlan}
+          isStreaming={false}
+          error="Plan generation was interrupted. Showing partial results."
+          onBack={vi.fn()}
+          onExport={vi.fn()}
+        />
+      );
+      expect(screen.getByText(/interrupted/)).toBeInTheDocument();
+      // Calendar should still render
+      expect(screen.getByText("Marathon Training Plan")).toBeInTheDocument();
+    });
+  });
 });
