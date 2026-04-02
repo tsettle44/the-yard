@@ -17,7 +17,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { activeProfile, guestMode } = useProfiles();
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
-  const isGeneratePage = pathname === "/generate";
+  const isGeneratePage = pathname === "/generate" || pathname.startsWith("/programs");
   const profileLabel = mounted && isGeneratePage
     ? (guestMode ? "GUEST" : activeProfile?.name?.toUpperCase() || null)
     : null;

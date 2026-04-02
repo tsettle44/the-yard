@@ -8,7 +8,7 @@ import { ProfileFormDialog } from "@/components/profiles/profile-form-dialog";
 import { ProfileCard } from "@/components/profiles/profile-card";
 import { Button } from "@/components/ui/button";
 import { Profile } from "@/types/profile";
-import { Plus, Settings } from "lucide-react";
+import { Calendar, Plus, Settings } from "lucide-react";
 
 export default function HomePage() {
   const router = useRouter();
@@ -103,7 +103,14 @@ export default function HomePage() {
           </Button>
         </div>
 
-        <div>
+        <div className="flex items-center justify-center gap-6">
+          <Link
+            href="/programs"
+            className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors font-medium"
+          >
+            <Calendar className="h-3.5 w-3.5" />
+            Programs
+          </Link>
           <Link
             href="/settings"
             className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors font-medium"
