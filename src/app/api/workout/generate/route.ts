@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { profile_id, style, duration_min, target_rpe, body_groups, parameters } =
+    const { profile_id, style, duration_min, target_rpe, body_groups, parameters, bodyweight } =
       parsed.data;
 
     const apiKey = config.anthropic.apiKey;
@@ -84,14 +84,14 @@ export async function POST(request: Request) {
       updated_at: "",
     };
 
-    const equipment: Equipment[] = body.equipment_data || [];
-    const sharedResources: SharedResourceGroup[] = body.shared_resources_data || [];
-    const layoutNotes: string = body.layout_notes || "";
+    const equipment: Equipment[] = bodyweight ? [] : (body.equipment_data || []);
+    const sharedResources: SharedResourceGroup[] = bodyweight ? [] : (body.shared_resources_data || []);
+    const layoutNotes: string = bodyweight ? "" : (body.layout_notes || "");
 
     const anthropic = getAIClient(apiKey);
     const result = streamObject({
       model: anthropic(DEFAULT_MODEL),
-      system: buildSystemPrompt(),
+      system: buildSystemPrompt(bodyweight),
       prompt: buildUserPrompt({
         profile,
         equipment,
@@ -102,6 +102,7 @@ export async function POST(request: Request) {
         targetRpe: target_rpe,
         bodyGroups: body_groups,
         parameters: parameters || {},
+        bodyweight,
       }),
       schema: workoutOutputSchema,
     });

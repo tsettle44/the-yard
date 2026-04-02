@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const generateWorkoutSchema = z.object({
-  profile_id: z.string().min(1),
-  gym_id: z.string().min(1),
+  profile_id: z.string().min(1).nullable(),
+  gym_id: z.string().min(1).nullable(),
   style: z.enum(["strength", "hiit", "circuit", "emom", "amrap", "tabata", "crossfit", "hyrox", "custom"]),
   duration_min: z.number().min(5).max(180),
   target_rpe: z.number().min(1).max(10),
@@ -15,6 +15,7 @@ export const generateWorkoutSchema = z.object({
     dropsets: z.boolean().optional(),
     notes: z.string().optional(),
   }).optional().default({}),
+  bodyweight: z.boolean().optional(),
 });
 
 export type GenerateWorkoutInput = z.infer<typeof generateWorkoutSchema>;

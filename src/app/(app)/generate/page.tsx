@@ -56,9 +56,9 @@ function GeneratePageContent() {
     generate({
       request,
       profileData: activeProfile || undefined,
-      equipmentData: activeGym?.equipment || [],
-      sharedResourcesData: activeGym?.shared_resources || [],
-      layoutNotes: activeGym?.layout_notes || "",
+      equipmentData: request.bodyweight ? [] : (activeGym?.equipment || []),
+      sharedResourcesData: request.bodyweight ? [] : (activeGym?.shared_resources || []),
+      layoutNotes: request.bodyweight ? "" : (activeGym?.layout_notes || ""),
     });
     setView("workout");
   }
@@ -70,14 +70,15 @@ function GeneratePageContent() {
   }
 
   function handleSave() {
-    if (!workout || !activeGym) return;
+    if (!workout) return;
+    if (!lastRequestRef.current?.bodyweight && !activeGym) return;
     if (!guestMode && !activeProfile) return;
     const req = lastRequestRef.current;
 
     const workoutRecord: Workout = {
       id: crypto.randomUUID(),
       profile_id: guestMode ? null : activeProfile?.id || null,
-      gym_id: activeGym.id,
+      gym_id: req?.bodyweight ? "bodyweight" : (activeGym?.id || ""),
       style: req?.style || "strength",
       duration_min: req?.duration_min || 45,
       target_rpe: req?.target_rpe || 7,

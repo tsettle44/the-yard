@@ -53,10 +53,11 @@ export type WorkoutInsert = Omit<Workout, "id" | "created_at" | "updated_at">;
 
 export interface GenerateWorkoutRequest {
   profile_id: string | null;
-  gym_id: string;
+  gym_id: string | null;
   style: WorkoutStyle;
   duration_min: number;
   target_rpe: number;
   body_groups: BodyGroup[];
   parameters: WorkoutParameters;
+  bodyweight?: boolean;
 }

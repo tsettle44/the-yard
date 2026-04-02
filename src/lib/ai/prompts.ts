@@ -12,9 +12,31 @@ interface PromptContext {
   targetRpe: number;
   bodyGroups: BodyGroup[];
   parameters: WorkoutParameters;
+  bodyweight?: boolean;
 }
 
-export function buildSystemPrompt(): string {
+export function buildSystemPrompt(bodyweight?: boolean): string {
+  if (bodyweight) {
+    return `You are an expert personal trainer and bodyweight workout programmer. You create detailed, safe, and effective workouts using only bodyweight exercises — no equipment required.
+
+CRITICAL RULES:
+1. Use ONLY bodyweight exercises. Do NOT suggest any equipment (dumbbells, barbells, bands, pull-up bars, etc.).
+2. All exercises must be performable in a small open space with no equipment.
+3. Include progressions and regressions in exercise notes where appropriate (e.g. "Scale down: knee push-ups" or "Scale up: archer push-ups").
+
+OTHER RULES:
+- Include warm-up and cool-down unless the user opts out.
+- Provide sets, reps (or time), and rest periods for every exercise.
+- Scale intensity to the target RPE.
+- Use proper exercise names and include brief form cues for non-obvious movements.
+
+OUTPUT FORMAT:
+- Organize the main workout into logical blocks (e.g. "Block A — Chest & Triceps").
+- Label each block format: "straight", "superset", "circuit", "emom", "amrap", or "tabata".
+- Keep sets, reps, and rest as short strings (e.g. "3", "8-10", "60s").
+- Provide 2-4 concise, actionable coaching tips specific to this workout.`;
+  }
+
   return `You are an expert personal trainer and workout programmer for home gyms. You create detailed, safe, and effective workouts tailored to the user's equipment, fitness level, and goals.
 
 CRITICAL RULES — EQUIPMENT CONSTRAINTS (you MUST follow these):
@@ -104,6 +126,26 @@ export function buildUserPrompt(ctx: PromptContext): string {
   if (ctx.parameters.circuits) paramLines.push("Use circuit-style programming");
   if (ctx.parameters.dropsets) paramLines.push("Include drop sets for hypertrophy");
   if (ctx.parameters.notes) paramLines.push(`Notes: ${ctx.parameters.notes}`);
+
+  if (ctx.bodyweight) {
+    return `Generate a bodyweight-only ${ctx.style} workout with the following specifications:
+
+**Athlete Profile:**
+- Name: ${ctx.profile.name}
+- Fitness Level: ${ctx.profile.fitness_level}
+- Goals: ${ctx.profile.goals || "General fitness"}
+- Preferred Styles: ${ctx.profile.preferred_styles.join(", ") || "Any"}
+${prefsLines.length > 0 ? prefsLines.map((l) => `- ${l}`).join("\n") : ""}
+
+**Workout Parameters:**
+- Duration: ${ctx.durationMin} minutes
+- Target RPE: ${ctx.targetRpe}/10
+- Body Groups: ${bodyGroupsStr}
+- Style: ${ctx.style}
+${paramLines.length > 0 ? paramLines.map((l) => `- ${l}`).join("\n") : ""}
+
+Generate a complete bodyweight-only workout with warm-up, main workout blocks, and cool-down. Use NO equipment — all exercises must be performable with just the body.`;
+  }
 
   return `Generate a ${ctx.style} workout with the following specifications:
 

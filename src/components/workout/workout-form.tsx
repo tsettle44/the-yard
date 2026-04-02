@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { workoutStyles, getStyleBySlug } from "@/lib/ai/styles";
 import { WorkoutStyle, BodyGroup, GenerateWorkoutRequest } from "@/types/workout";
+import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
 
 const bodyGroups: { value: BodyGroup; label: string }[] = [
@@ -40,6 +41,7 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
   const [circuits, setCircuits] = useState(false);
   const [dropsets, setDropsets] = useState(false);
   const [notes, setNotes] = useState("");
+  const [bodyweight, setBodyweight] = useState(false);
 
   function selectStyle(slug: WorkoutStyle) {
     setStyle(slug);
@@ -64,11 +66,11 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!gymId) return;
+    if (!bodyweight && !gymId) return;
     if (!guestMode && !profileId) return;
     onGenerate({
       profile_id: guestMode ? null : profileId,
-      gym_id: gymId,
+      gym_id: bodyweight ? null : gymId,
       style,
       duration_min: duration,
       target_rpe: rpe,
@@ -79,10 +81,11 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
         dropsets: dropsets || undefined,
         notes: notes || undefined,
       },
+      bodyweight: bodyweight || undefined,
     });
   }
 
-  const canGenerate = (profileId || guestMode) && gymId && !isStreaming;
+  const canGenerate = (profileId || guestMode) && (gymId || bodyweight) && !isStreaming;
 
   return (
     <form onSubmit={handleSubmit}>
@@ -101,11 +104,23 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
               Please create and select a profile first.
             </div>
           )}
-          {!gymId && (
+          {!gymId && !bodyweight && (
             <div className="p-3 border border-border text-sm text-muted-foreground">
-              Please create and configure a gym first.
+              Please create and configure a gym first, or enable bodyweight mode below.
             </div>
           )}
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="bodyweight-toggle">Bodyweight Only</Label>
+              <p className="text-xs text-muted-foreground">No equipment needed</p>
+            </div>
+            <Switch
+              id="bodyweight-toggle"
+              checked={bodyweight}
+              onCheckedChange={setBodyweight}
+            />
+          </div>
 
           <div className="space-y-2">
             <Label>Style</Label>
