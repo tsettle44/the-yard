@@ -27,7 +27,7 @@ vi.mock("ai", () => ({
 const mockGetAIClient = vi.fn().mockReturnValue((model: string) => ({ model }));
 vi.mock("@/lib/ai/client", () => ({
   getAIClient: (...args: unknown[]) => mockGetAIClient(...args),
-  DEFAULT_MODEL: "claude-sonnet-4-20250514",
+  DEFAULT_MODEL: "claude-haiku-4-5-20251001",
 }));
 
 vi.mock("@/lib/ai/prompts", () => ({
