@@ -104,7 +104,7 @@ export function makeWorkout(overrides: Partial<Workout> = {}): Workout {
       cooldown: [{ name: "Stretch", detail: "5 min" }],
       coaching: ["Focus on form"],
     },
-    model_used: "claude-sonnet-4-20250514",
+    model_used: "claude-haiku-4-5-20251001",
     prompt_tokens: 500,
     completion_tokens: 1000,
     rating: null,

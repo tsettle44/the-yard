@@ -8,6 +8,7 @@ import { useWorkoutStream } from "@/hooks/use-workout-stream";
 import { useWorkouts } from "@/hooks/use-workouts";
 import { useEntitlement } from "@/hooks/use-entitlement";
 import { config } from "@/lib/config";
+import { DEFAULT_MODEL } from "@/lib/ai/client";
 import { WorkoutForm } from "@/components/workout/workout-form";
 import { WorkoutView } from "@/components/workout/workout-view";
 import { UpgradeCard } from "@/components/payment/upgrade-card";
@@ -86,7 +87,7 @@ function GeneratePageContent() {
       parameters: req?.parameters || {},
       content: rawJson,
       structured: workout as Workout["structured"],
-      model_used: "claude-sonnet",
+      model_used: DEFAULT_MODEL,
       prompt_tokens: 0,
       completion_tokens: 0,
       rating: null,

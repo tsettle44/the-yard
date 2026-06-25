@@ -21,6 +21,6 @@ describe("AI client", () => {
 
   it("exports DEFAULT_MODEL constant", async () => {
     const { DEFAULT_MODEL } = await import("@/lib/ai/client");
-    expect(DEFAULT_MODEL).toBe("claude-sonnet-4-20250514");
+    expect(DEFAULT_MODEL).toBe("claude-haiku-4-5-20251001");
   });
 });
