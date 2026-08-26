@@ -72,6 +72,31 @@ describe("generateWorkoutSchema", () => {
     const result = generateWorkoutSchema.safeParse({ ...validInput, body_groups: [] });
     expect(result.success).toBe(false);
   });
+
+  it("defaults participant count to one", () => {
+    expect(generateWorkoutSchema.parse(validInput).participant_count).toBe(1);
+  });
+
+  it("accepts a group workout with a format", () => {
+    const result = generateWorkoutSchema.safeParse({
+      ...validInput,
+      participant_count: 6,
+      group_format: "station_rotation",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("requires a format for multiple participants", () => {
+    expect(generateWorkoutSchema.safeParse({ ...validInput, participant_count: 2 }).success).toBe(false);
+  });
+
+  it("rejects participant counts above six", () => {
+    expect(generateWorkoutSchema.safeParse({
+      ...validInput,
+      participant_count: 7,
+      group_format: "shared",
+    }).success).toBe(false);
+  });
 });
 
 describe("workoutOutputSchema", () => {
@@ -136,6 +161,25 @@ describe("workoutOutputSchema", () => {
       ],
     };
     const result = workoutOutputSchema.safeParse(withNote);
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a structured group schedule", () => {
+    const result = workoutOutputSchema.safeParse({
+      ...validOutput,
+      group: {
+        participant_count: 2,
+        format: "station_rotation",
+        rounds: [{
+          name: "Round 1",
+          duration: "5 min",
+          assignments: [
+            { participant: 1, exercise: "Squat", work: "10 reps", rest: "30s", equipment_ids: ["rack"] },
+            { participant: 2, exercise: "Push-up", work: "10 reps", rest: "30s", equipment_ids: [] },
+          ],
+        }],
+      },
+    });
     expect(result.success).toBe(true);
   });
 });

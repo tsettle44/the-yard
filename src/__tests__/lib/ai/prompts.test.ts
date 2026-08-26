@@ -64,6 +64,27 @@ describe("buildUserPrompt()", () => {
       parameters: {},
     });
     expect(prompt).toContain("Dumbbells x2");
+    expect(prompt).toContain(`ID: ${eq.id}`);
+  });
+
+  it("explicitly lists a quantity of one", () => {
+    const eq = makeEquipment({ name: "Barbell", quantity: 1 });
+    const prompt = buildUserPrompt({
+      profile: makeProfile(), equipment: [eq], sharedResources: [], layoutNotes: "",
+      style: "strength", durationMin: 60, targetRpe: 7, bodyGroups: ["chest"], parameters: {},
+    });
+    expect(prompt).toContain("Barbell x1");
+  });
+
+  it("includes station rotation capacity rules", () => {
+    const prompt = buildUserPrompt({
+      profile: makeProfile(), equipment: [makeEquipment()], sharedResources: [], layoutNotes: "",
+      style: "circuit", durationMin: 45, targetRpe: 7, bodyGroups: ["full_body"], parameters: {},
+      participantCount: 4, groupFormat: "station_rotation",
+    });
+    expect(prompt).toContain("Participants: 4");
+    expect(prompt).toContain("Station Rotation");
+    expect(prompt).toContain("Never double-book equipment");
   });
 
   it("shows 'Bodyweight only' for empty equipment", () => {

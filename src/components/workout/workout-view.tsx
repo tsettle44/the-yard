@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Copy, Save, Loader2, ArrowLeft, Minus } from "lucide-react";
 import { toast } from "sonner";
 import type { WorkoutOutput, WorkoutBlock, WorkoutExercise, WorkoutListItem } from "@/lib/ai/schemas";
+import type { GroupWorkoutSchedule } from "@/types/workout";
 
 interface WorkoutViewProps {
   workout: Partial<WorkoutOutput> | null;
@@ -114,6 +115,47 @@ function CoachingSection({ tips }: { tips: string[] }) {
   );
 }
 
+function GroupScheduleSection({ schedule }: { schedule: GroupWorkoutSchedule }) {
+  const format = schedule.format === "station_rotation" ? "Station Rotation" : "Shared Workout";
+
+  return (
+    <div className="border border-border rounded-none">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-5 border-b border-border">
+        <h2 className="font-black text-xs sm:text-sm uppercase tracking-[0.2em]">Group Schedule</h2>
+        <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+          {schedule.participant_count} People · {format}
+        </span>
+      </div>
+      <div className="divide-y divide-border">
+        {schedule.rounds.map((round, roundIndex) => (
+          <div key={`${round.name}-${roundIndex}`} className="p-4 sm:p-5 space-y-3">
+            <div className="flex items-baseline justify-between gap-3">
+              <h3 className="font-bold text-sm uppercase tracking-wide">{round.name}</h3>
+              <span className="font-mono text-xs text-muted-foreground">{round.duration}</span>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {round.assignments.map((assignment) => (
+                <div key={assignment.participant} className="border border-border/70 p-3">
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">
+                    Person {assignment.participant}
+                  </p>
+                  <p className="text-sm font-semibold uppercase tracking-wide">{assignment.exercise}</p>
+                  <p className="mt-2 text-xs font-mono">
+                    {assignment.work} · Rest {assignment.rest}
+                  </p>
+                  {assignment.note && (
+                    <p className="mt-2 text-xs text-muted-foreground">{assignment.note}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function workoutToPlainText(workout: Partial<WorkoutOutput>): string {
   const lines: string[] = [];
 
@@ -135,6 +177,20 @@ function workoutToPlainText(workout: Partial<WorkoutOutput>): string {
         lines.push(line);
       });
       if (block.note) lines.push(`  Note: ${block.note}`);
+      lines.push("");
+    });
+  }
+
+  if (workout.group) {
+    const format = workout.group.format === "station_rotation" ? "STATION ROTATION" : "SHARED WORKOUT";
+    lines.push(`GROUP SCHEDULE — ${workout.group.participant_count} PEOPLE — ${format}`);
+    workout.group.rounds.forEach((round) => {
+      lines.push(`${round.name} (${round.duration})`);
+      round.assignments.forEach((assignment) => {
+        let line = `  Person ${assignment.participant}: ${assignment.exercise} — ${assignment.work}, rest ${assignment.rest}`;
+        if (assignment.note) line += ` (${assignment.note})`;
+        lines.push(line);
+      });
       lines.push("");
     });
   }
@@ -178,6 +234,7 @@ export function WorkoutView({ workout, isStreaming, error, onSave, onBack }: Wor
   const hasContent = workout && (
     (workout.warmup && workout.warmup.length > 0) ||
     (workout.blocks && workout.blocks.length > 0) ||
+    Boolean(workout.group?.rounds.length) ||
     (workout.cooldown && workout.cooldown.length > 0) ||
     (workout.coaching && workout.coaching.length > 0)
   );
@@ -207,6 +264,8 @@ export function WorkoutView({ workout, isStreaming, error, onSave, onBack }: Wor
           {workout.blocks?.map((block, i) => (
             <BlockSection key={i} block={block} />
           ))}
+
+          {workout.group && <GroupScheduleSection schedule={workout.group} />}
 
           {workout.cooldown && workout.cooldown.length > 0 && (
             <ListSection title="Cool-Down" items={workout.cooldown} />

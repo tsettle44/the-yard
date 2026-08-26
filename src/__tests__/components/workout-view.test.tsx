@@ -68,6 +68,29 @@ describe("WorkoutView", () => {
     expect(screen.getByText("Focus on form")).toBeInTheDocument();
   });
 
+  it("renders a participant-by-participant group schedule", () => {
+    const workout = {
+      ...defaultWorkout,
+      group: {
+        participant_count: 2,
+        format: "station_rotation" as const,
+        rounds: [{
+          name: "Rotation 1",
+          duration: "5 min",
+          assignments: [
+            { participant: 1, exercise: "Goblet Squat", work: "10 reps", rest: "30s", equipment_ids: ["kettlebell"] },
+            { participant: 2, exercise: "Push-up", work: "10 reps", rest: "30s", equipment_ids: [] },
+          ],
+        }],
+      },
+    };
+    render(<WorkoutView workout={workout} isStreaming={false} error={null} onBack={onBack} />);
+    expect(screen.getByText("Group Schedule")).toBeInTheDocument();
+    expect(screen.getByText(/2 People/)).toBeInTheDocument();
+    expect(screen.getByText("Person 1")).toBeInTheDocument();
+    expect(screen.getByText("Goblet Squat")).toBeInTheDocument();
+  });
+
   it("renders format labels correctly", () => {
     const workout = {
       ...defaultWorkout,

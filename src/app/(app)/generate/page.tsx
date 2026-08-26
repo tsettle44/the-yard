@@ -84,7 +84,11 @@ function GeneratePageContent() {
       duration_min: req?.duration_min || 45,
       target_rpe: req?.target_rpe || 7,
       body_groups: req?.body_groups || ["full_body"],
-      parameters: req?.parameters || {},
+      parameters: {
+        ...(req?.parameters || {}),
+        participant_count: req?.participant_count,
+        group_format: req?.group_format,
+      },
       content: rawJson,
       structured: workout as Workout["structured"],
       model_used: DEFAULT_MODEL,

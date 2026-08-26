@@ -20,8 +20,10 @@ vi.mock("@/lib/supabase/admin", () => ({
 }));
 
 const mockStreamObject = vi.fn();
+const mockGenerateObject = vi.fn();
 vi.mock("ai", () => ({
   streamObject: (...args: unknown[]) => mockStreamObject(...args),
+  generateObject: (...args: unknown[]) => mockGenerateObject(...args),
 }));
 
 const mockGetAIClient = vi.fn().mockReturnValue((model: string) => ({ model }));
@@ -117,6 +119,51 @@ describe("POST /api/workout/generate", () => {
       const req = makeRequest({ profile_id: "p1", gym_id: "g1", style: "strength", duration_min: 60, target_rpe: 7, body_groups: ["chest"] });
       const res = (await POST(req))!;
       expect(res).toBeInstanceOf(Response);
+    });
+
+    it("generates and validates group workouts before returning them", async () => {
+      const { generateWorkoutSchema } = await import("@/lib/ai/schemas");
+      (generateWorkoutSchema.safeParse as ReturnType<typeof vi.fn>).mockReturnValueOnce({
+        success: true,
+        data: {
+          profile_id: "p1",
+          gym_id: "g1",
+          style: "circuit",
+          duration_min: 45,
+          target_rpe: 7,
+          body_groups: ["full_body"],
+          parameters: {},
+          participant_count: 2,
+          group_format: "station_rotation",
+        },
+      });
+      mockGenerateObject.mockResolvedValueOnce({
+        object: {
+          warmup: [],
+          blocks: [],
+          cooldown: [],
+          coaching: [],
+          group: {
+            participant_count: 2,
+            format: "station_rotation",
+            rounds: [{
+              name: "Round 1",
+              duration: "5 min",
+              assignments: [
+                { participant: 1, exercise: "Push-up", work: "10 reps", rest: "30s", equipment_ids: [] },
+                { participant: 2, exercise: "Squat", work: "10 reps", rest: "30s", equipment_ids: [] },
+              ],
+            }],
+          },
+        },
+      });
+
+      const res = (await POST(makeRequest({ profile_id: "p1" })))!;
+
+      expect(mockGenerateObject).toHaveBeenCalled();
+      expect(mockStreamObject).not.toHaveBeenCalled();
+      expect(res.status).toBe(200);
+      expect((await res.json()).group.participant_count).toBe(2);
     });
 
     it("returns 500 on error", async () => {

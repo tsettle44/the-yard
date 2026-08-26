@@ -1,6 +1,6 @@
 import { Profile } from "@/types/profile";
 import { Equipment, SharedResourceGroup } from "@/types/gym";
-import { WorkoutStyle, BodyGroup, WorkoutParameters } from "@/types/workout";
+import { WorkoutStyle, BodyGroup, WorkoutParameters, GroupWorkoutFormat } from "@/types/workout";
 
 interface PromptContext {
   profile: Profile;
@@ -13,6 +13,8 @@ interface PromptContext {
   bodyGroups: BodyGroup[];
   parameters: WorkoutParameters;
   bodyweight?: boolean;
+  participantCount?: number;
+  groupFormat?: GroupWorkoutFormat;
 }
 
 export function buildSystemPrompt(bodyweight?: boolean): string {
@@ -75,8 +77,7 @@ OUTPUT FORMAT:
 export function buildUserPrompt(ctx: PromptContext): string {
   const equipmentList = ctx.equipment
     .map((e) => {
-      const qty = e.quantity > 1 ? ` x${e.quantity}` : "";
-      return `- ${e.name}${qty} (${e.category})`;
+      return `- ${e.name} x${e.quantity} (${e.category}, ID: ${e.id})`;
     })
     .join("\n");
 
@@ -127,6 +128,23 @@ export function buildUserPrompt(ctx: PromptContext): string {
   if (ctx.parameters.dropsets) paramLines.push("Include drop sets for hypertrophy");
   if (ctx.parameters.notes) paramLines.push(`Notes: ${ctx.parameters.notes}`);
 
+  const participantCount = ctx.participantCount || 1;
+  const groupSection = participantCount > 1
+    ? `
+**Group Schedule (HARD REQUIREMENTS):**
+- Participants: ${participantCount}, numbered 1 through ${participantCount}
+- Format: ${ctx.groupFormat === "shared" ? "Shared Workout" : "Station Rotation"}
+- Every synchronized round must contain exactly one assignment for every participant.
+- equipment_ids must contain only canonical IDs from Available Equipment. Use [] for bodyweight, mobility, or rest assignments.
+- Equipment quantities are the TOTAL inventory shared by the entire group. In each round, an equipment ID may appear across no more assignments than its quantity.
+- If there is not enough equipment, use bodyweight, mobility, recovery, or coaching stations. Never double-book equipment.
+${ctx.groupFormat === "shared"
+  ? "- Keep the group moving together. When equipment is scarce, assign explicit bodyweight work or recovery to people waiting their turn."
+  : "- Build balanced stations and rotate participants through them in subsequent rounds. Do not assign one participant to multiple stations in a round."}
+- Return the complete schedule in the group field with participant_count ${participantCount} and format ${ctx.groupFormat}.
+`
+    : "";
+
   if (ctx.bodyweight) {
     return `Generate a bodyweight-only ${ctx.style} workout with the following specifications:
 
@@ -143,6 +161,7 @@ ${prefsLines.length > 0 ? prefsLines.map((l) => `- ${l}`).join("\n") : ""}
 - Body Groups: ${bodyGroupsStr}
 - Style: ${ctx.style}
 ${paramLines.length > 0 ? paramLines.map((l) => `- ${l}`).join("\n") : ""}
+${groupSection}
 
 Generate a complete bodyweight-only workout with warm-up, main workout blocks, and cool-down. Use NO equipment — all exercises must be performable with just the body.`;
   }
@@ -162,6 +181,7 @@ ${prefsLines.length > 0 ? prefsLines.map((l) => `- ${l}`).join("\n") : ""}
 - Body Groups: ${bodyGroupsStr}
 - Style: ${ctx.style}
 ${paramLines.length > 0 ? paramLines.map((l) => `- ${l}`).join("\n") : ""}
+${groupSection}
 
 **Available Equipment:**
 ${equipmentList || "Bodyweight only"}
@@ -172,5 +192,5 @@ ${sharedResourcesSection}
 **Gym Layout:**
 ${layoutSection}
 
-Generate a complete workout with warm-up, main workout blocks, and cool-down. You MUST respect every shared resource constraint listed above — these represent physical limitations of the gym that cannot be ignored.`;
+Generate a complete workout with warm-up, main workout blocks, and cool-down. You MUST respect every shared resource constraint listed above — these represent physical limitations of the gym that cannot be ignored.${participantCount > 1 ? " The blocks summarize the session; the group schedule is the authoritative participant-by-participant rotation plan." : ""}`;
 }
