@@ -61,7 +61,7 @@ const workoutBlockSchema = z.object({
 });
 
 const groupWorkoutAssignmentSchema = z.object({
-  participant: z.number().int().min(1).max(6).describe("Participant number, starting at 1"),
+  participant: z.number().int().describe("Participant number, starting at 1"),
   exercise: z.string().describe("Exercise assigned during this synchronized round"),
   work: z.string().describe("Work interval or rep target"),
   rest: z.string().describe("Rest or transition interval"),
@@ -76,7 +76,7 @@ const groupWorkoutRoundSchema = z.object({
 });
 
 export const groupWorkoutScheduleSchema = z.object({
-  participant_count: z.number().int().min(2).max(6),
+  participant_count: z.number().int(),
   format: z.enum(["station_rotation", "shared"]),
   rounds: z.array(groupWorkoutRoundSchema).min(1),
 });
