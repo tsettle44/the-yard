@@ -29,7 +29,9 @@ export function validateGroupSchedule({
     return { valid: false, errors: ["The generated workout is missing its group schedule."] };
   }
 
-  if (schedule.participant_count !== participantCount) {
+  if (!Number.isInteger(schedule.participant_count)) {
+    errors.push(`Participant count must be an integer, received ${schedule.participant_count}.`);
+  } else if (schedule.participant_count !== participantCount) {
     errors.push(`Expected ${participantCount} participants, received ${schedule.participant_count}.`);
   }
   if (schedule.format !== format) {
@@ -44,6 +46,9 @@ export function validateGroupSchedule({
     const demand = new Map<string, number>();
 
     round.assignments.forEach((assignment) => {
+      if (!Number.isInteger(assignment.participant)) {
+        errors.push(`Round ${roundIndex + 1} has non-integer participant ${assignment.participant}.`);
+      }
       if (participants.has(assignment.participant)) {
         errors.push(`Round ${roundIndex + 1} assigns participant ${assignment.participant} more than once.`);
       }

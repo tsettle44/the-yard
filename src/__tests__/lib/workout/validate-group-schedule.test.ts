@@ -94,6 +94,29 @@ describe("validateGroupSchedule", () => {
     expect(result.errors.join(" ")).toContain("unavailable equipment");
   });
 
+  it("rejects non-integer participant values from the model", () => {
+    const result = validateGroupSchedule({
+      schedule: {
+        ...schedule,
+        participant_count: 2.5,
+        rounds: [{
+          ...schedule.rounds[0],
+          assignments: [
+            { ...schedule.rounds[0].assignments[0], participant: 1.5 },
+            schedule.rounds[0].assignments[1],
+          ],
+        }],
+      },
+      participantCount: 2,
+      format: "station_rotation",
+      equipment: [makeEquipment({ id: "barbell" })],
+      sharedResources: [],
+    });
+    expect(result.valid).toBe(false);
+    expect(result.errors.join(" ")).toContain("Participant count must be an integer");
+    expect(result.errors.join(" ")).toContain("non-integer participant");
+  });
+
   it("rejects simultaneous use of a no-superset shared resource", () => {
     const resourceSchedule = {
       ...schedule,
