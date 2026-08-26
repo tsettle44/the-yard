@@ -1,5 +1,7 @@
 export type WorkoutStyle = "strength" | "hiit" | "circuit" | "emom" | "amrap" | "tabata" | "crossfit" | "hyrox" | "custom";
 
+export type GroupWorkoutFormat = "station_rotation" | "shared";
+
 export type BodyGroup =
   | "chest"
   | "back"
@@ -15,6 +17,29 @@ export interface WorkoutParameters {
   circuits?: boolean;
   dropsets?: boolean;
   notes?: string;
+  participant_count?: number;
+  group_format?: GroupWorkoutFormat;
+}
+
+export interface GroupWorkoutAssignment {
+  participant: number;
+  exercise: string;
+  work: string;
+  rest: string;
+  equipment_ids: string[];
+  note?: string;
+}
+
+export interface GroupWorkoutRound {
+  name: string;
+  duration: string;
+  assignments: GroupWorkoutAssignment[];
+}
+
+export interface GroupWorkoutSchedule {
+  participant_count: number;
+  format: GroupWorkoutFormat;
+  rounds: GroupWorkoutRound[];
 }
 
 export interface WorkoutStructured {
@@ -27,6 +52,7 @@ export interface WorkoutStructured {
   }[];
   cooldown?: { name: string; detail: string }[];
   coaching?: string[];
+  group?: GroupWorkoutSchedule;
 }
 
 export interface Workout {
@@ -60,4 +86,6 @@ export interface GenerateWorkoutRequest {
   body_groups: BodyGroup[];
   parameters: WorkoutParameters;
   bodyweight?: boolean;
+  participant_count?: number;
+  group_format?: GroupWorkoutFormat;
 }

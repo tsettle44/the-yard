@@ -16,6 +16,24 @@ export const generateWorkoutSchema = z.object({
     notes: z.string().optional(),
   }).optional().default({}),
   bodyweight: z.boolean().optional(),
+  participant_count: z.number().int().min(1).max(6).optional().default(1),
+  group_format: z.enum(["station_rotation", "shared"]).optional(),
+}).superRefine((value, ctx) => {
+  if (value.participant_count > 1 && !value.group_format) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["group_format"],
+      message: "Group format is required for group workouts",
+    });
+  }
+
+  if (value.participant_count === 1 && value.group_format) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["group_format"],
+      message: "Group format is only valid for group workouts",
+    });
+  }
 });
 
 export type GenerateWorkoutInput = z.infer<typeof generateWorkoutSchema>;
@@ -42,11 +60,33 @@ const workoutBlockSchema = z.object({
   note: z.string().optional().describe("Overall block note (e.g. 'Rest 2 min between rounds')"),
 });
 
+const groupWorkoutAssignmentSchema = z.object({
+  participant: z.number().int().min(1).max(6).describe("Participant number, starting at 1"),
+  exercise: z.string().describe("Exercise assigned during this synchronized round"),
+  work: z.string().describe("Work interval or rep target"),
+  rest: z.string().describe("Rest or transition interval"),
+  equipment_ids: z.array(z.string()).describe("Canonical equipment IDs occupied by this participant; empty for bodyweight"),
+  note: z.string().optional().describe("Brief setup, scaling, or rotation guidance"),
+});
+
+const groupWorkoutRoundSchema = z.object({
+  name: z.string().describe("Round or rotation name"),
+  duration: z.string().describe("Total duration or timing for this synchronized round"),
+  assignments: z.array(groupWorkoutAssignmentSchema).describe("Exactly one assignment per participant"),
+});
+
+export const groupWorkoutScheduleSchema = z.object({
+  participant_count: z.number().int().min(2).max(6),
+  format: z.enum(["station_rotation", "shared"]),
+  rounds: z.array(groupWorkoutRoundSchema).min(1),
+});
+
 export const workoutOutputSchema = z.object({
   warmup: z.array(workoutListItemSchema).describe("Warm-up exercises"),
   blocks: z.array(workoutBlockSchema).describe("Main workout blocks"),
   cooldown: z.array(workoutListItemSchema).describe("Cool-down / stretching"),
   coaching: z.array(z.string()).describe("2-4 coaching tips"),
+  group: groupWorkoutScheduleSchema.optional().describe("Required synchronized schedule for group workouts"),
 });
 
 export type WorkoutOutput = z.infer<typeof workoutOutputSchema>;

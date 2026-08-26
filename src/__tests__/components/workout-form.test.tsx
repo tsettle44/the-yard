@@ -60,6 +60,22 @@ describe("WorkoutForm", () => {
     expect(screen.getByLabelText("Instructions")).toBeInTheDocument();
   });
 
+  it("submits group count and selected format", async () => {
+    const onGenerate = vi.fn();
+    const user = userEvent.setup();
+    render(<WorkoutForm {...defaultProps} onGenerate={onGenerate} />);
+
+    await user.click(screen.getByLabelText("Group Workout"));
+    await user.click(screen.getByRole("button", { name: "4 people" }));
+    await user.click(screen.getByRole("button", { name: /Shared Workout/ }));
+    fireEvent.submit(getForm());
+
+    expect(onGenerate).toHaveBeenCalledWith(expect.objectContaining({
+      participant_count: 4,
+      group_format: "shared",
+    }));
+  });
+
   it("updates style and defaults when selecting style", async () => {
     const onGenerate = vi.fn();
     render(<WorkoutForm {...defaultProps} onGenerate={onGenerate} />);
@@ -148,6 +164,8 @@ describe("WorkoutForm", () => {
       target_rpe: 7,
       body_groups: ["full_body"],
       parameters: {},
+      participant_count: undefined,
+      group_format: undefined,
     });
   });
 

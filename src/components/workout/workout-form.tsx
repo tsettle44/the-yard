@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { workoutStyles, getStyleBySlug } from "@/lib/ai/styles";
-import { WorkoutStyle, BodyGroup, GenerateWorkoutRequest } from "@/types/workout";
+import { WorkoutStyle, BodyGroup, GenerateWorkoutRequest, GroupWorkoutFormat } from "@/types/workout";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
 
@@ -42,6 +42,9 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
   const [dropsets, setDropsets] = useState(false);
   const [notes, setNotes] = useState("");
   const [bodyweight, setBodyweight] = useState(false);
+  const [groupWorkout, setGroupWorkout] = useState(false);
+  const [participantCount, setParticipantCount] = useState(2);
+  const [groupFormat, setGroupFormat] = useState<GroupWorkoutFormat>("station_rotation");
 
   function selectStyle(slug: WorkoutStyle) {
     setStyle(slug);
@@ -82,6 +85,8 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
         notes: notes || undefined,
       },
       bodyweight: bodyweight || undefined,
+      participant_count: groupWorkout ? participantCount : undefined,
+      group_format: groupWorkout ? groupFormat : undefined,
     });
   }
 
@@ -121,6 +126,65 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
               onCheckedChange={setBodyweight}
             />
           </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="group-workout-toggle">Group Workout</Label>
+              <p className="text-xs text-muted-foreground">Coordinate equipment for up to 6 people</p>
+            </div>
+            <Switch
+              id="group-workout-toggle"
+              checked={groupWorkout}
+              onCheckedChange={setGroupWorkout}
+            />
+          </div>
+
+          {groupWorkout && (
+            <div className="space-y-4 border border-border p-3">
+              <div className="space-y-2">
+                <Label>Number of People</Label>
+                <div className="flex flex-wrap gap-2">
+                  {[2, 3, 4, 5, 6].map((count) => (
+                    <Button
+                      key={count}
+                      type="button"
+                      size="sm"
+                      variant={participantCount === count ? "default" : "outline"}
+                      onClick={() => setParticipantCount(count)}
+                      className="min-w-[2.5rem]"
+                      aria-label={`${count} people`}
+                    >
+                      {count}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Group Format</Label>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <Button
+                    type="button"
+                    variant={groupFormat === "station_rotation" ? "default" : "outline"}
+                    onClick={() => setGroupFormat("station_rotation")}
+                    className="h-auto min-h-14 flex-col items-start px-3 py-2 text-left"
+                  >
+                    <span>Station Rotation</span>
+                    <span className="text-[10px] font-normal opacity-70">Each person rotates through a station</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={groupFormat === "shared" ? "default" : "outline"}
+                    onClick={() => setGroupFormat("shared")}
+                    className="h-auto min-h-14 flex-col items-start px-3 py-2 text-left"
+                  >
+                    <span>Shared Workout</span>
+                    <span className="text-[10px] font-normal opacity-70">Move together with turns for equipment</span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Style</Label>

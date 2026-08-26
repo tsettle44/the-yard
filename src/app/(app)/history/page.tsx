@@ -62,6 +62,11 @@ export default function HistoryPage() {
                     <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border border-border px-1.5 py-0.5">
                       RPE {workout.target_rpe}
                     </span>
+                    {(workout.parameters.participant_count || 1) > 1 && (
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border border-border px-1.5 py-0.5">
+                        {workout.parameters.participant_count} People · {workout.parameters.group_format === "station_rotation" ? "Rotation" : "Shared"}
+                      </span>
+                    )}
                     {workout.body_groups.map((g) => (
                       <span key={g} className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground hidden sm:inline">
                         {g.replace("_", " ")}
