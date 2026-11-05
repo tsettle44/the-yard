@@ -1,5 +1,5 @@
 import { streamObject } from "ai";
-import { getAIClient, DEFAULT_MODEL } from "@/lib/ai/client";
+import { getAIClient, getModelId } from "@/lib/ai/client";
 import { buildSystemPrompt, buildUserPrompt } from "@/lib/ai/prompts";
 import { generateWorkoutSchema, workoutOutputSchema } from "@/lib/ai/schemas";
 import { config } from "@/lib/config";
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
 
     const anthropic = getAIClient(apiKey);
     const result = streamObject({
-      model: anthropic(DEFAULT_MODEL),
+      model: anthropic(getModelId()),
       system: buildSystemPrompt(bodyweight),
       prompt: buildUserPrompt({
         profile,
