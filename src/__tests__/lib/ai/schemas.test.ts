@@ -237,10 +237,10 @@ describe("groupWorkoutOutputSchema", () => {
     expect(groupWorkoutOutputSchema.safeParse(out).success).toBe(false);
   });
 
-  it("requires an integer person index", () => {
+  it("leaves person-index integrity to the validator (schema cannot use .int(): Anthropic rejects integer bounds)", () => {
     const out = structuredClone(validOutput);
     out.blocks[0].slots[0].assignments[0].person = 0.5;
-    expect(groupWorkoutOutputSchema.safeParse(out).success).toBe(false);
+    expect(groupWorkoutOutputSchema.safeParse(out).success).toBe(true);
   });
 
   it("rejects an invalid block format", () => {
@@ -281,5 +281,14 @@ describe("groupWorkoutOutputSchema", () => {
     it("parseSavedGroupWorkout parses a group workout", () => {
       expect(parseSavedGroupWorkout(validOutput, { group_size: 2 })?.blocks).toHaveLength(1);
     });
+  });
+});
+
+describe("groupWorkoutOutputSchema — Anthropic structured-output compatibility", () => {
+  it("emits no numeric bounds (Anthropic rejects minimum/maximum on integer/number)", async () => {
+    const { z } = await import("zod");
+    const { groupWorkoutOutputSchema } = await import("@/lib/ai/schemas");
+    const json = JSON.stringify(z.toJSONSchema(groupWorkoutOutputSchema));
+    expect(json).not.toMatch(/"(minimum|maximum|exclusiveMinimum|exclusiveMaximum|multipleOf)"/);
   });
 });

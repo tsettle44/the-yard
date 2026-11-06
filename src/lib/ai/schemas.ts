@@ -72,7 +72,7 @@ export type WorkoutListItem = z.infer<typeof workoutListItemSchema>;
 // --- Group workout output schema ---
 
 const groupAssignmentSchema = z.object({
-  person: z.number().int().describe("0-based person index (0 to group_size-1). Each person appears exactly once per slot"),
+  person: z.number().describe("0-based person index (0 to group_size-1). Each person appears exactly once per slot"),
   name: z.string().describe("Exercise name for this person in this slot"),
   sets: z.string().describe("Number of sets (e.g. '3', '3-4')"),
   reps: z.string().describe("Reps, time, or distance (e.g. '8-10', '30s')"),
