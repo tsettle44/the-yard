@@ -15,6 +15,7 @@ export interface WorkoutParameters {
   circuits?: boolean;
   dropsets?: boolean;
   notes?: string;
+  group_size?: number;
 }
 
 export interface WorkoutStructured {
@@ -60,4 +61,9 @@ export interface GenerateWorkoutRequest {
   body_groups: BodyGroup[];
   parameters: WorkoutParameters;
   bodyweight?: boolean;
+}
+
+export interface GenerateGroupWorkoutRequest extends GenerateWorkoutRequest {
+  group_size: number;
+  person_names?: string[];
 }
