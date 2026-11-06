@@ -61,7 +61,7 @@ export function useGroupWorkout(): UseGroupWorkoutReturn {
 
         if (!res.ok) {
           if (Array.isArray(data.violations)) setViolations(data.violations);
-          throw new Error(data.error || `HTTP ${res.status}`);
+          throw new Error(data.detail ? `${data.error} (${data.detail})` : data.error || `HTTP ${res.status}`);
         }
 
         if (!data.workout) throw new Error("No workout returned");

@@ -217,8 +217,11 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error("Group workout generation error:", error);
+    // Surface the upstream failure class/status (never the key) to make 500s diagnosable.
+    const e = error as { name?: string; statusCode?: number; message?: string };
+    const detail = [e?.name, e?.statusCode, e?.message?.slice(0, 300)].filter(Boolean).join(" | ");
     return Response.json(
-      { error: "Failed to generate workout" },
+      { error: "Failed to generate workout", detail },
       { status: 500 }
     );
   }
