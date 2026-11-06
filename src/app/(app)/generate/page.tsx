@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useRef, useState, useEffect } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useProfiles } from "@/hooks/use-profile";
 import { useGym } from "@/hooks/use-gym";
@@ -117,6 +118,13 @@ function GeneratePageContent() {
 
   return (
     <div className="max-w-lg mx-auto space-y-4">
+      <Link
+        href="/generate/group"
+        className="inline-block text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors font-medium"
+      >
+        Group workout →
+      </Link>
+
       {isHosted && !entitlement.loading && entitlement.plan && (
         <div className="text-sm text-muted-foreground text-center">
           {entitlement.remaining} generation{entitlement.remaining !== 1 ? "s" : ""} remaining
