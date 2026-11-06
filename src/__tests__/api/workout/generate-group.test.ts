@@ -86,32 +86,32 @@ describe("POST /api/workout/generate-group", () => {
   describe("self-hosted mode", () => {
     it("skips auth and rate-limit", async () => {
       mockGenerateObject.mockResolvedValue({ object: validPlan });
-      await POST(makeRequest());
+      (await POST(makeRequest()))!;
       expect(mockRequireAuth).not.toHaveBeenCalled();
       expect(mockRpc).not.toHaveBeenCalled();
     });
 
     it("returns 400 for invalid body (group_size out of range)", async () => {
-      const res = await POST(makeRequest({ group_size: 7 }));
+      const res = (await POST(makeRequest({ group_size: 7 })))!;
       expect(res.status).toBe(400);
       expect(mockGenerateObject).not.toHaveBeenCalled();
     });
 
     it("returns 400 when group_size is missing", async () => {
-      const res = await POST(makeRequest({ group_size: undefined }));
+      const res = (await POST(makeRequest({ group_size: undefined })))!;
       expect(res.status).toBe(400);
     });
 
     it("returns 401 when no API key", async () => {
       mockApiKey = "";
-      const res = await POST(makeRequest());
+      const res = (await POST(makeRequest()))!;
       expect(res.status).toBe(401);
       expect(mockGenerateObject).not.toHaveBeenCalled();
     });
 
     it("returns the workout when valid on the first try", async () => {
       mockGenerateObject.mockResolvedValue({ object: validPlan });
-      const res = await POST(makeRequest());
+      const res = (await POST(makeRequest()))!;
       expect(res.status).toBe(200);
       expect(await res.json()).toEqual({ workout: validPlan });
       expect(mockGenerateObject).toHaveBeenCalledTimes(1);
@@ -126,7 +126,7 @@ describe("POST /api/workout/generate-group", () => {
       mockGenerateObject
         .mockResolvedValueOnce({ object: conflictPlan })
         .mockResolvedValueOnce({ object: validPlan });
-      const res = await POST(makeRequest());
+      const res = (await POST(makeRequest()))!;
       expect(res.status).toBe(200);
       expect(await res.json()).toEqual({ workout: validPlan });
       expect(mockGenerateObject).toHaveBeenCalledTimes(2);
@@ -144,14 +144,14 @@ describe("POST /api/workout/generate-group", () => {
         .mockResolvedValueOnce({ object: conflictPlan })
         .mockResolvedValueOnce({ object: conflictPlan })
         .mockResolvedValueOnce({ object: validPlan });
-      const res = await POST(makeRequest());
+      const res = (await POST(makeRequest()))!;
       expect(res.status).toBe(200);
       expect(mockGenerateObject).toHaveBeenCalledTimes(3);
     });
 
     it("returns 422 with violations after 3 invalid attempts, never the plan", async () => {
       mockGenerateObject.mockResolvedValue({ object: conflictPlan });
-      const res = await POST(makeRequest());
+      const res = (await POST(makeRequest()))!;
       expect(res.status).toBe(422);
       const body = await res.json();
       expect(body.error).toBeTruthy();
@@ -165,7 +165,7 @@ describe("POST /api/workout/generate-group", () => {
       mockGenerateObject
         .mockResolvedValueOnce({ object: plan(["db"], []) })
         .mockResolvedValueOnce({ object: plan([], []) });
-      const res = await POST(makeRequest({ bodyweight: true, gym_id: null }));
+      const res = (await POST(makeRequest({ bodyweight: true, gym_id: null })))!;
       expect(res.status).toBe(200);
       const first = mockGenerateObject.mock.calls[0][0];
       expect(first.system).toContain("BODYWEIGHT-ONLY");
@@ -174,7 +174,7 @@ describe("POST /api/workout/generate-group", () => {
 
     it("ignores client equipment in bodyweight mode", async () => {
       mockGenerateObject.mockResolvedValue({ object: plan(["barbell"], []) });
-      const res = await POST(makeRequest({ bodyweight: true, gym_id: null }));
+      const res = (await POST(makeRequest({ bodyweight: true, gym_id: null })))!;
       expect(res.status).toBe(422);
     });
 
@@ -183,7 +183,7 @@ describe("POST /api/workout/generate-group", () => {
         id: "sr1", gym_id: "g", resource_name: "Rack", equipment_ids: ["barbell", "db"], constraint: "no_superset",
       }];
       mockGenerateObject.mockResolvedValue({ object: validPlan });
-      const res = await POST(makeRequest({ shared_resources_data: shared }));
+      const res = (await POST(makeRequest({ shared_resources_data: shared })))!;
       expect(res.status).toBe(422);
       const body = await res.json();
       expect(body.violations[0]).toContain("no_superset");
@@ -194,14 +194,14 @@ describe("POST /api/workout/generate-group", () => {
       mockGenerateObject
         .mockRejectedValueOnce(schemaError)
         .mockResolvedValueOnce({ object: validPlan });
-      const res = await POST(makeRequest());
+      const res = (await POST(makeRequest()))!;
       expect(res.status).toBe(200);
       expect(mockGenerateObject.mock.calls[1][0].prompt).toContain("did not match the required JSON schema");
     });
 
     it("passes a time-bounded abort signal and output cap", async () => {
       mockGenerateObject.mockResolvedValue({ object: validPlan });
-      await POST(makeRequest());
+      (await POST(makeRequest()))!;
       const call = mockGenerateObject.mock.calls[0][0];
       expect(call.abortSignal).toBeInstanceOf(AbortSignal);
       expect(call.maxOutputTokens).toBeGreaterThan(0);
@@ -210,7 +210,7 @@ describe("POST /api/workout/generate-group", () => {
     it("returns 504 on timeout and never a plan", async () => {
       const timeout = Object.assign(new Error("timed out"), { name: "TimeoutError" });
       mockGenerateObject.mockRejectedValue(timeout);
-      const res = await POST(makeRequest());
+      const res = (await POST(makeRequest()))!;
       expect(res.status).toBe(504);
       expect((await res.json()).workout).toBeUndefined();
       expect(mockGenerateObject).toHaveBeenCalledTimes(1);
@@ -218,7 +218,7 @@ describe("POST /api/workout/generate-group", () => {
 
     it("returns 500 on unexpected error", async () => {
       mockGenerateObject.mockRejectedValue(new Error("AI Error"));
-      const res = await POST(makeRequest());
+      const res = (await POST(makeRequest()))!;
       expect(res.status).toBe(500);
     });
   });
@@ -234,7 +234,7 @@ describe("POST /api/workout/generate-group", () => {
       mockRequireAuth.mockResolvedValue({
         error: Response.json({ error: "Unauthorized" }, { status: 401 }),
       });
-      const res = await POST(makeRequest());
+      const res = (await POST(makeRequest()))!;
       expect(res.status).toBe(401);
       expect(mockGenerateObject).not.toHaveBeenCalled();
     });
@@ -245,7 +245,7 @@ describe("POST /api/workout/generate-group", () => {
         .mockResolvedValueOnce({ object: conflictPlan })
         .mockResolvedValueOnce({ object: conflictPlan })
         .mockResolvedValueOnce({ object: validPlan });
-      await POST(makeRequest({ timezone: "America/Chicago" }));
+      (await POST(makeRequest({ timezone: "America/Chicago" })))!;
       expect(mockRpc).toHaveBeenCalledTimes(1);
       expect(mockRpc).toHaveBeenCalledWith("check_and_increment_generation", {
         p_user_id: "user-123",
@@ -255,13 +255,13 @@ describe("POST /api/workout/generate-group", () => {
 
     it("defaults timezone to UTC", async () => {
       mockRpc.mockResolvedValue({ data: { allowed: true, plan: "paid", used: 1, limit: 3 }, error: null });
-      await POST(makeRequest());
+      (await POST(makeRequest()))!;
       expect(mockRpc).toHaveBeenCalledWith("check_and_increment_generation", { p_user_id: "user-123", p_timezone: "UTC" });
     });
 
     it("returns 403 with free message when free limit reached", async () => {
       mockRpc.mockResolvedValue({ data: { allowed: false, plan: "free", used: 3, limit: 3 }, error: null });
-      const res = await POST(makeRequest());
+      const res = (await POST(makeRequest()))!;
       expect(res.status).toBe(403);
       expect((await res.json()).error).toContain("free generations");
       expect(mockGenerateObject).not.toHaveBeenCalled();
@@ -269,27 +269,27 @@ describe("POST /api/workout/generate-group", () => {
 
     it("returns 403 with paid message when daily limit reached", async () => {
       mockRpc.mockResolvedValue({ data: { allowed: false, plan: "paid", used: 3, limit: 3 }, error: null });
-      const res = await POST(makeRequest());
+      const res = (await POST(makeRequest()))!;
       expect(res.status).toBe(403);
       expect((await res.json()).error).toContain("Daily generation limit");
     });
 
     it("returns 500 when the entitlement check fails", async () => {
       mockRpc.mockResolvedValue({ data: null, error: { message: "boom" } });
-      const res = await POST(makeRequest());
+      const res = (await POST(makeRequest()))!;
       expect(res.status).toBe(500);
       expect(mockGenerateObject).not.toHaveBeenCalled();
     });
 
     it("does not consume a generation for an invalid request", async () => {
-      const res = await POST(makeRequest({ group_size: 1 }));
+      const res = (await POST(makeRequest({ group_size: 1 })))!;
       expect(res.status).toBe(400);
       expect(mockRpc).not.toHaveBeenCalled();
     });
 
     it("proceeds and returns the workout when allowed", async () => {
       mockRpc.mockResolvedValue({ data: { allowed: true, plan: "paid", used: 1, limit: 3 }, error: null });
-      const res = await POST(makeRequest());
+      const res = (await POST(makeRequest()))!;
       expect(res.status).toBe(200);
       expect((await res.json()).workout).toEqual(validPlan);
     });
