@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -30,9 +30,22 @@ interface WorkoutFormProps {
   guestMode?: boolean;
   onGenerate: (request: GenerateWorkoutRequest) => void;
   isStreaming: boolean;
+  title?: string;
+  submitLabel?: string;
+  /** Extra fields rendered after the bodyweight toggle (e.g. group size). */
+  children?: ReactNode;
 }
 
-export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreaming }: WorkoutFormProps) {
+export function WorkoutForm({
+  profileId,
+  gymId,
+  guestMode,
+  onGenerate,
+  isStreaming,
+  title = "Generate Workout",
+  submitLabel = "Generate Workout",
+  children,
+}: WorkoutFormProps) {
   const [style, setStyle] = useState<WorkoutStyle>("strength");
   const [duration, setDuration] = useState(45);
   const [rpe, setRpe] = useState(7);
@@ -91,7 +104,7 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
     <form onSubmit={handleSubmit}>
       <Card>
         <CardHeader>
-          <CardTitle>Generate Workout</CardTitle>
+          <CardTitle>{title}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
           {guestMode && (
@@ -121,6 +134,8 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
               onCheckedChange={setBodyweight}
             />
           </div>
+
+          {children}
 
           <div className="space-y-2">
             <Label>Style</Label>
@@ -229,7 +244,7 @@ export function WorkoutForm({ profileId, gymId, guestMode, onGenerate, isStreami
             {isStreaming ? (
               <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
             ) : (
-              "Generate Workout"
+              submitLabel
             )}
           </Button>
         </CardFooter>

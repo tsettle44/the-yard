@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { WorkoutView } from "@/components/workout/workout-view";
 import { WorkoutStream } from "@/components/workout/workout-stream";
-import type { WorkoutOutput } from "@/lib/ai/schemas";
+import { GroupWorkoutView } from "@/components/workout/group-workout-view";
+import { parseSavedGroupWorkout, type WorkoutOutput } from "@/lib/ai/schemas";
 import { Trash2, ChevronDown, ChevronUp, Star } from "lucide-react";
 
 export default function HistoryPage() {
@@ -46,7 +47,9 @@ export default function HistoryPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {workouts.map((workout) => (
+          {workouts.map((workout) => {
+            const groupSaved = parseSavedGroupWorkout(workout.structured, workout.parameters);
+            return (
             <Card key={workout.id}>
               <CardHeader
                 className="pb-2 cursor-pointer"
@@ -62,6 +65,11 @@ export default function HistoryPage() {
                     <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border border-border px-1.5 py-0.5">
                       RPE {workout.target_rpe}
                     </span>
+                    {workout.parameters?.group_size ? (
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border border-border px-1.5 py-0.5">
+                        Group ×{workout.parameters.group_size}
+                      </span>
+                    ) : null}
                     {workout.body_groups.map((g) => (
                       <span key={g} className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground hidden sm:inline">
                         {g.replace("_", " ")}
@@ -82,7 +90,13 @@ export default function HistoryPage() {
               </CardHeader>
               {expandedId === workout.id && (
                 <CardContent className="space-y-3">
-                  {workout.structured ? (
+                  {groupSaved ? (
+                    <GroupWorkoutView
+                      workout={groupSaved}
+                      groupSize={workout.parameters.group_size!}
+                      embedded
+                    />
+                  ) : workout.structured && !workout.parameters?.group_size ? (
                     <WorkoutView
                       workout={workout.structured as WorkoutOutput}
                       isStreaming={false}
@@ -125,7 +139,8 @@ export default function HistoryPage() {
                 </CardContent>
               )}
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
