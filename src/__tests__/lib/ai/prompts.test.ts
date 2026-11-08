@@ -277,3 +277,29 @@ describe("group prompts", () => {
     expect(buildUserPrompt(base)).not.toContain("GROUP workout");
   });
 });
+
+describe("buildGroupUserPrompt — never_together planning step", () => {
+  it("tells the model to choose exactly one item up front", () => {
+    const equipment = [
+      { id: "a", gym_id: "g", slug: "barbell", name: "Barbell", category: "strength", attributes: {}, quantity: 1 },
+      { id: "b", gym_id: "g", slug: "bench", name: "Bench Press", category: "strength", attributes: {}, quantity: 1 },
+    ] as never;
+    const sharedResources = [
+      { id: "s", gym_id: "g", resource_name: "Rack", equipment_ids: ["a", "b"], constraint: "never_together" },
+    ] as never;
+    const prompt = buildGroupUserPrompt({
+      profile: { name: "T", fitness_level: "intermediate", preferred_styles: [], goals: "", preferences: {} } as never,
+      equipment,
+      sharedResources,
+      layoutNotes: "",
+      style: "strength",
+      durationMin: 45,
+      targetRpe: 7,
+      bodyGroups: ["full_body"],
+      parameters: {},
+      groupSize: 2,
+    });
+    expect(prompt).toContain("PLANNING STEP");
+    expect(prompt).toContain("exactly ONE of [Barbell, Bench Press]");
+  });
+});

@@ -280,6 +280,19 @@ export function buildGroupUserPrompt(ctx: GroupPromptContext): string {
           .join("\n")
       : "None defined";
 
+  const neverTogetherPlanning = ctx.sharedResources
+    .filter((sr) => sr.constraint === "never_together")
+    .map((sr) => {
+      const items = sr.equipment_ids
+        .map((id) => ctx.equipment.find((e) => e.id === id)?.name || id)
+        .join(", ");
+      return `- "${sr.resource_name}": FIRST choose exactly ONE of [${items}] (or none) and write it down in your head. Every other item in this group is FORBIDDEN in every block and slot, including finishers and AMRAPs. Build the whole workout around that one choice.`;
+    })
+    .join("\n");
+  const sharedResourcesFullSection = neverTogetherPlanning
+    ? `${sharedResourcesSection}\n\nPLANNING STEP (do this before writing any slot):\n${neverTogetherPlanning}`
+    : sharedResourcesSection;
+
   const prefsLines: string[] = [];
   if (ctx.profile.preferences.injuries?.length) {
     prefsLines.push(`Injuries/limitations: ${ctx.profile.preferences.injuries.join(", ")}`);
@@ -336,7 +349,7 @@ Generate a complete bodyweight-only group workout. Every person appears exactly 
 ${equipmentList || "None"}
 
 **Shared Resources & Constraints (HARD RULES):**
-${sharedResourcesSection}
+${sharedResourcesFullSection}
 
 **Gym Layout:**
 ${layoutSection}

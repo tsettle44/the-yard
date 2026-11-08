@@ -9,11 +9,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Profile } from "@/types/profile";
 import { Equipment, SharedResourceGroup } from "@/types/gym";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const MAX_ATTEMPTS = 3;
 // Leave headroom under maxDuration so we can still return a clean JSON error.
-const TIME_BUDGET_MS = 55_000;
+const TIME_BUDGET_MS = 110_000;
 const MAX_OUTPUT_TOKENS = 8_000;
 
 function isAbortError(error: unknown): boolean {
@@ -33,7 +33,7 @@ function withViolationFeedback(prompt: string, violations: string[]): string {
 IMPORTANT — YOUR PREVIOUS PLAN WAS REJECTED by the equipment validator. Produce a complete, corrected plan that fixes EVERY violation below (blocks and slots are numbered from 1, people from 0):
 ${violations.map((v) => `- ${v}`).join("\n")}
 
-Re-check every slot against the equipment quantities and shared resource rules before answering.`;
+For any "never_together" violation: pick exactly ONE item from that group, then REMOVE every other item of the group from ALL blocks (replace those exercises with ones that use no item from the group). Re-check every slot against the equipment quantities and shared resource rules before answering.`;
 }
 
 export async function POST(request: Request) {
