@@ -299,7 +299,7 @@ describe("buildGroupUserPrompt — never_together planning step", () => {
       parameters: {},
       groupSize: 2,
     });
-    expect(prompt).toContain("PLANNING STEP");
+    expect(prompt).toContain("PLANNING STEP (do this before writing any slot):\n- \"Rack\"");
     expect(prompt).toContain("exactly ONE of [Barbell, Bench Press]");
   });
 });
